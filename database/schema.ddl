@@ -22,3 +22,24 @@ CREATE TABLE content.platos (
     CONSTRAINT FK_platos_restaurantes FOREIGN KEY (restaurante_id) 
         REFERENCES restaurantes(id)
 );
+
+CREATE TABLE content.pedido(
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    restaurante_id INT NOT NULL,
+    estado VARCHAR(120) NOT NULL,
+    fecha DATE NOT NULL,
+    total DECIMAL(10, 2)
+
+    CONSTRAINT FK_pedido_restaurantes FOREIGN KEY (restaurante_id) 
+        REFERENCES restaurantes(id)
+);
+
+CREATE TABLE content.item_pedido(
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    plato_id INT NOT NULL,
+    cantidad VARCHAR(120) NOT NULL,
+    precio_unitario DECIMAL(10, 2)
+
+    CONSTRAINT FK_pedido_restaurantes FOREIGN KEY (restaurante_id) 
+        REFERENCES restaurantes(id)
+);

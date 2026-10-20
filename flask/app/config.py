@@ -15,6 +15,6 @@ class Config:
 class TestConfig(Config):
     TESTING = True
     SECRET_KEY = "test-secret"
-    SQLALCHEMY_DATABASE_URI = "sqlite://"
+    SQLALCHEMY_DATABASE_URI = "postgresql://jorge:jorgeGenialsixseven67@db:5432/lacartados"
     JWT_SECRET_KEY = "test-jwt-secret-with-at-least-32-bytes"
     JWT_EXPIRES_MINUTES = 5
