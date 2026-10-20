@@ -4,14 +4,21 @@ db = SQLAlchemy()
 
 
 class Restaurante(db.Model):
-  __tablename__ = "restaurantes"
-  __table_args__ = {"schema": "content"}
+    __tablename__ = "restaurantes"
+    __table_args__ = {"schema": "content"}
 
-  id = db.Column(db.Integer, primary_key=True)
-  nombre = db.Column(db.String(120), nullable=False)
-  ciudad = db.Column(db.String(80), nullable=False)
-  direccion = db.Column(db.String(200))
-  telefono = db.Column(db.String(30))
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(120), nullable=False)
+    ciudad = db.Column(db.String(80), nullable=False)
+    direccion = db.Column(db.String(200))
+    telefono = db.Column(db.String(30))
+
+    platos = db.relationship(
+        "Plato",
+        backref="restaurante",
+        cascade="all, delete-orphan",   # al borrar el restaurante, borra sus platos
+        order_by="Plato.nombre",
+    )
 
 
 class Plato(db.Model):
