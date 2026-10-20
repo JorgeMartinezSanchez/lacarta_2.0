@@ -11,3 +11,10 @@ class Config:
     JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "dev-jwt-secret-change-me-32-bytes-min")
     JWT_EXPIRES_MINUTES = int(os.environ.get("JWT_EXPIRES_MINUTES", "60"))
     JWT_ISSUER = os.environ.get("JWT_ISSUER", "flask-todoapp")
+
+class TestConfig(Config):
+    TESTING = True
+    SECRET_KEY = "test-secret"
+    SQLALCHEMY_DATABASE_URI = "sqlite://"
+    JWT_SECRET_KEY = "test-jwt-secret-with-at-least-32-bytes"
+    JWT_EXPIRES_MINUTES = 5
