@@ -22,4 +22,3 @@ CREATE TABLE content.platos (
     CONSTRAINT FK_platos_restaurantes FOREIGN KEY (restaurante_id) 
         REFERENCES restaurantes(id)
 );
-
