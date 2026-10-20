@@ -3,8 +3,6 @@ services:
     image: my-web-app:latest
     ports:
       - "5000:5000"
-    environment:
-      - ENV=production
     volumes:
       - ./app:/var/www/html
     depends_on:
@@ -14,8 +12,6 @@ services:
     image: my-django-app:latest
     ports:
       - "8000:8000"
-    environment:
-      - ENV=production
     volumes:
       - ./django_app:/var/www/django
     depends_on:
