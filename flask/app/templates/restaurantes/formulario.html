@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block titulo %}
+    {% if restaurante %}Editar Restaurante{% else %}Nuevo Restaurante{% endif %}
+{% endblock %}
+
+{% block contenido %}
+    <h1>{% if restaurante %}Editar: {{ restaurante.nombre }}{% else %}Registrar Nuevo Restaurante{% endif %}</h1>
+
+    <!-- Si 'restaurante' existe va a la ruta de editar, si no, a la de crear -->
+    <form action="{% if restaurante %}{{ url_for('editar_restaurante', restaurante_id=restaurante.id) }}{% else %}{{ url_for('crear_restaurante') }}{% endif %}" method="POST">
+        
+        <div>
+            <label for="nombre">Nombre:*</label><br>
+            <input type="text" id="nombre" name="nombre" value="{{ restaurante.nombre if restaurante else '' }}" required>
+        </div>
+        <br>
+
+        <div>
+            <label for="ciudad">Ciudad:*</label><br>
+            <input type="text" id="ciudad" name="ciudad" value="{{ restaurante.ciudad if restaurante else '' }}" required>
+        </div>
+        <br>
+
+        <div>
+            <label for="direccion">Dirección:</label><br>
+            <input type="text" id="direccion" name="direccion" value="{{ restaurante.direccion if restaurante else '' }}">
+        </div>
+        <br>
+
+        <div>
+            <label for="telefono">Teléfono:</label><br>
+            <input type="text" id="telefono" name="telefono" value="{{ restaurante.telefono if restaurante else '' }}">
+        </div>
+        <br>
+
+        <button type="submit">{% if restaurante %}Guardar Cambios{% else %}Crear Restaurante{% endif %}</button>
+    </form>
+
+    <p><br><a href="{{ url_for('listar_restaurantes') }}">Cancelar / Volver</a></p>
+{% endblock %}

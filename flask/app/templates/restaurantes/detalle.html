@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% block titulo %}Detalle de {{ restaurante.nombre }}{% endblock %}
+
+{% block contenido %}
+    <h1>{{ restaurante.nombre }}</h1>
+    <p><strong>Ciudad:</strong> {{ restaurante.ciudad }}</p>
+    <p><strong>Dirección:</strong> {{ restaurante.direccion or 'No especificada' }}</p>
+    <p><strong>Teléfono:</strong> {{ restaurante.telefono or 'No especificado' }}</p>
+
+    <!-- Botones de editar y eliminar restaurante -->
+    <p>
+        <a href="{{ url_for('editar_restaurante', restaurante_id=restaurante.id) }}">Editar Restaurante</a>
+        
+        <!-- El eliminar se realiza por POST (Requisito 7: No debe ser accesible por GET) -->
+        <form action="{{ url_for('eliminar_restaurante', restaurante_id=restaurante.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar este restaurante y todos sus platos?');">
+            <button type="submit" style="color: red;">Eliminar Restaurante</button>
+        </form>
+    </p>
+
+    <hr>
+
+    <h2>Platos del Restaurante</h2>
+    
+    <!-- Listado de platos -->
+    {% if restaurante.platos %}
+        <ul>
+            {% for plato in restaurante.platos %}
+                <li>
+                    <strong>{{ plato.nombre }}</strong> - ${{ "%.2f"|format(plato.precio) }} 
+                    {% if plato.disponible %}
+                        <span style="color: green;">(Disponible)</span>
+                    {% else %}
+                        <span style="color: gray;">(No disponible)</span>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Este restaurante aún no tiene platos registrados.</p>
+    {% endif %}
+
+    <h3>Agregar un nuevo plato</h3>
+    <!-- Requisito 8: POST /restaurantes/<id>/platos -->
+    <form action="{{ url_for('agregar_plato', restaurante_id=restaurante.id) }}" method="POST">
+        <div>
+            <label for="nombre">Nombre del plato:</label><br>
+            <input type="text" id="nombre" name="nombre" required>
+        </div>
+        <br>
+        <div>
+            <label for="precio">Precio:</label><br>
+            <input type="number" step="0.01" id="precio" name="precio" min="0.01" required>
+        </div>
+        <br>
+        <div>
+            <label>
+                <input type="checkbox" name="disponible" value="1" checked> Disponible
+            </label>
+        </div>
+        <br>
+        <button type="submit">Agregar Plato</button>
+    </form>
+
+    <p><br><a href="{{ url_for('listar_restaurantes') }}">Volver al listado</a></p>
+{% endblock %}

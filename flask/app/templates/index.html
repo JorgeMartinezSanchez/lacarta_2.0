@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block titulo %}Lista de Restaurantes{% endblock %}
+
+{% block contenido %}
+    <h1>Restaurantes</h1>
+
+    <!-- Requisito 2: Filtrar por ciudad con GET -->
+    <form method="GET" action="{{ url_for('listar_restaurantes') }}">
+        <label for="ciudad">Filtrar por ciudad:</label>
+        <input type="text" id="ciudad" name="ciudad" value="{{ request.args.get('ciudad', '') }}">
+        <button type="submit">Filtrar</button>
+    </form>
+    <br>
+
+    <p>
+        <a href="{{ url_for('crear_restaurante') }}">Crear nuevo restaurante</a>
+    </p>
+
+    <!-- Requisito 1: Listado y manejo de caso vacío -->
+    {% if restaurantes %}
+        <table border="1" cellpadding="5" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Ciudad</th>
+                    <th>Platos</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in restaurantes %}
+                <tr>
+                    <td>{{ r.nombre }}</td>
+                    <td>{{ r.ciudad }}</td>
+                    <td>{{ r.platos | length }}</td>
+                    <td>
+                        <a href="{{ url_for('detalle_restaurante', restaurante_id=r.id) }}">Ver detalle</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No hay restaurantes registrados.</p>
+    {% endif %}
+{% endblock %}

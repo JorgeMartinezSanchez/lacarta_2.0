@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+
+{% block titulo %}Página no encontrada (404){% endblock %}
+
+{% block contenido %}
+    <div style="text-align: center; margin-top: 50px;">
+        <h1>Error 404</h1>
+        <p>Lo sentimos, el recurso o página que buscas no existe o fue eliminado.</p>
+        <p><a href="{{ url_for('listar_restaurantes') }}">Volver al inicio (Listado de Restaurantes)</a></p>
+    </div>
+{% endblock %}

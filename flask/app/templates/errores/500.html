@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+
+{% block titulo %}Error del Servidor (500){% endblock %}
+
+{% block contenido %}
+    <div style="text-align: center; margin-top: 50px;">
+        <h1>Error 500</h1>
+        <p>Ocurrió un error interno en el servidor. Por favor, intenta de nuevo más tarde.</p>
+        <p><a href="{{ url_for('listar_restaurantes') }}">Volver al inicio (Listado de Restaurantes)</a></p>
+    </div>
+{% endblock %}
