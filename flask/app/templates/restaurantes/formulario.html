@@ -8,7 +8,7 @@
     <h1>{% if restaurante %}Editar: {{ restaurante.nombre }}{% else %}Registrar Nuevo Restaurante{% endif %}</h1>
 
     <!-- Si 'restaurante' existe va a la ruta de editar, si no, a la de crear -->
-    <form action="{% if restaurante %}{{ url_for('editar_restaurante', restaurante_id=restaurante.id) }}{% else %}{{ url_for('crear_restaurante') }}{% endif %}" method="POST">
+    <form action="{% if restaurante %}{{ url_for('restaurantes.editar_restaurante', restaurante_id=restaurante.id) }}{% else %}{{ url_for('restaurantes.crear_restaurante') }}{% endif %}" method="POST">
         
         <div>
             <label for="nombre">Nombre:*</label><br>
@@ -37,5 +37,5 @@
         <button type="submit">{% if restaurante %}Guardar Cambios{% else %}Crear Restaurante{% endif %}</button>
     </form>
 
-    <p><br><a href="{{ url_for('listar_restaurantes') }}">Cancelar / Volver</a></p>
+    <p><br><a href="{{ url_for('restaurantes.listar_restaurantes') }}">Cancelar / Volver</a></p>
 {% endblock %}

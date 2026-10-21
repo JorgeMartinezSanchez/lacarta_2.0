@@ -59,18 +59,19 @@ class Pedido(models.Model):
 
 
 class ItemPedido(models.Model):
-    # Nota: En tu SQL faltaba la columna restaurante_id y su FK en item_pedido, 
-    # pero se incluyó la relación basada en la restricción nombrada en el script.
+    pedido = models.ForeignKey(
+        Pedido,
+        on_delete=models.CASCADE,
+        db_column="pedido_id",
+        related_name="items",
+    )
     plato = models.ForeignKey(
         Plato, on_delete=models.CASCADE, db_column="plato_id", related_name="items"
     )
-    # Nota: En tu SQL 'cantidad' está como VARCHAR(120), se respeta el tipo de dato.
     cantidad = models.CharField(max_length=120)
     precio_unitario = models.DecimalField(
         max_digits=10, decimal_places=2, blank=True, null=True
     )
-    
-    # Referencia al restaurante según el FK_pedido_restaurantes declarado en tu tabla item_pedido
     restaurante = models.ForeignKey(
         Restaurante,
         on_delete=models.CASCADE,

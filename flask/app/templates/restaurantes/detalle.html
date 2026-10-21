@@ -10,10 +10,10 @@
 
     <!-- Botones de editar y eliminar restaurante -->
     <p>
-        <a href="{{ url_for('editar_restaurante', restaurante_id=restaurante.id) }}">Editar Restaurante</a>
+        <a href="{{ url_for('restaurantes.editar_restaurante', restaurante_id=restaurante.id) }}">Editar Restaurante</a>
         
         <!-- El eliminar se realiza por POST (Requisito 7: No debe ser accesible por GET) -->
-        <form action="{{ url_for('eliminar_restaurante', restaurante_id=restaurante.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar este restaurante y todos sus platos?');">
+        <form action="{{ url_for('restaurantes.eliminar_restaurante', restaurante_id=restaurante.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar este restaurante y todos sus platos?');">
             <button type="submit" style="color: red;">Eliminar Restaurante</button>
         </form>
     </p>
@@ -62,5 +62,5 @@
         <button type="submit">Agregar Plato</button>
     </form>
 
-    <p><br><a href="{{ url_for('listar_restaurantes') }}">Volver al listado</a></p>
+    <p><br><a href="{{ url_for('restaurantes.listar_restaurantes') }}">Volver al listado</a></p>
 {% endblock %}
