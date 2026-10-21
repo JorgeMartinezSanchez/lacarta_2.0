@@ -12,8 +12,8 @@ MIN_PASSWORD = 8
 # password" take about the same time and cannot be told apart.
 _DUMMY_HASH = generate_password_hash("not-a-real-password")
 def json_error(status, code, message):
-    return jsonify({"success": False, "error": status, "code": code, "message": message}),
-    status
+    return jsonify({"success": False, "error": status, "code": code, "message": message}), status
+
 def read_credentials():
     data = request.get_json(silent=True) or {}
     return str(data.get("username", "")).strip().lower(), str(data.get("password", ""))
