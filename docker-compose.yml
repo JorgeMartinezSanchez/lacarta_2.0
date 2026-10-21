@@ -1,15 +1,18 @@
 services:
   flask:
-    image: my-web-app:latest
+    build:
+      context: ./flask
+      dockerfile: Dockerfile
+    env_file:
+      - .env
     ports:
       - "5000:5000"
-    volumes:
-      - ./app:/var/www/html
     depends_on:
-      - db
+      django:
+        condition: service_completed_succesfully
   
   django:
-    image: my-django-app:latest
+    build: ./django_admin
     ports:
       - "8000:8000"
     volumes:
@@ -26,6 +29,5 @@ services:
       - POSTGRES_ROOT_PASSWORD=${POSTGRES_ROOT_PASSWORD}
     volumes:
       - pg_data:/var/lib/postgresql/data
-      - database/schema.ddl:/docker-entrypoint-initdb.d/schema.ddl
 volumes:
   pg_data: 
