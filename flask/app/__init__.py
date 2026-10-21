@@ -13,7 +13,10 @@ def create_app(config_class=Config):
     from . import models                   # noqa: F401  (registra los modelos)
     from .routes import bp as restaurantes_bp
     from .auth.routes import bp as auth_bp
-
+    from .auth import AuthError
+    from .auth.handlers import handle_auth_error
+    
+    app.register_error_handler(AuthError, handle_auth_error)
     app.register_blueprint(restaurantes_bp)
     app.register_blueprint(auth_bp)
 

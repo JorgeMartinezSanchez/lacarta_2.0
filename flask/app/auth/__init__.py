@@ -1,6 +1,6 @@
-from .decorators import login_required
+from .decorators import get_token_auth_header, requires_auth
 from .errors import AuthError
-from .tokens import generate_token, verify_token
+from .tokens import create_access_token, verify_decode_jwt
 
 __all__ = [
     "AuthError",
