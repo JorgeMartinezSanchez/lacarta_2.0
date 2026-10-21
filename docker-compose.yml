@@ -1,33 +1,38 @@
 services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      # - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro   # tu SQL que crea el schema "content" y las tablas
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   flask:
     build:
       context: ./flask
       dockerfile: Dockerfile.dev
-    env_file:
-      - .env
-    ports:
-      - "5000:5000"
+    env_file: .env
+    ports: ["5000:5000"]
+    volumes: ["./flask:/app"]
     depends_on:
-      django:
-        condition: service_completed_succesfully
-  
+      db:
+        condition: service_healthy
+
   django:
     build: ./django_admin
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./django_app:/var/www/django
+    env_file: .env
+    ports: ["8000:8000"]
+    volumes: ["./django_admin:/app"]
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
-  db:
-    image: postgres:16
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_ROOT_PASSWORD=${POSTGRES_ROOT_PASSWORD}
-    volumes:
-      - pg_data:/var/lib/postgresql/data
 volumes:
-  pg_data: 
+  pg_data:

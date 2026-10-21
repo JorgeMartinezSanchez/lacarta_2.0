@@ -8,4 +8,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-CMD ["python", "manage.py", "runserver"]
+CMD ["gunicorn", "-w", "4", "django_admin.wsgi:application"]
