@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Sign in{% endblock %}
+{% block content %}
+    <section class="card auth-card">
+        <h2>Sign in</h2>
+        <p>Auth0 shows the sign-in and sign-up page, then sends you back here.</p>
+        <a href="{{ url_for('auth.login', next=next) }}" class="btn btn-primary">Sign in with Auth0</a>
+    </section>
+{% endblock %}

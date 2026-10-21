@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Access denied{% endblock %}
+{% block content %}
+<section class="card auth-card">
+    <h2>{{ status }} · Access denied</h2>
+    <p>{{ message }}</p>
+    <p><a href="{{ url_for('restaurantes.index') }}" class="btn">Back to restaurants</a></p>
+</section>
+{% endblock %}

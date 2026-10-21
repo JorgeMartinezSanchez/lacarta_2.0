@@ -42,7 +42,7 @@
 
     <h3>Agregar un nuevo plato</h3>
     <!-- Requisito 8: POST /restaurantes/<id>/platos -->
-    <form action="{{ url_for('agregar_plato', restaurante_id=restaurante.id) }}" method="POST">
+    <form action="{{ url_for('restaurantes.agregar_plato', restaurante_id=restaurante.id) }}" method="POST">
         <div>
             <label for="nombre">Nombre del plato:</label><br>
             <input type="text" id="nombre" name="nombre" required>
