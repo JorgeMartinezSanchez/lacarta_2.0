@@ -1,5 +1,7 @@
 from flask import render_template, request, session
+
 from .errors import AuthError
+
 def handle_auth_error(err: AuthError):
     """401 shows the sign-in page; 400 and 403 show the error page.
     The 401 page has a button instead of redirecting to Auth0 on its own:

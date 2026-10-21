@@ -1,7 +1,9 @@
 from functools import wraps
 from flask import session
+
 from .errors import AuthError
 from .tokens import verify_decode_jwt
+
 def get_token_from_session():
     """Return the Auth0 access token saved by /auth/callback.
     The course reads the token from the Authorization header because its
