@@ -2,7 +2,7 @@ services:
   flask:
     build:
       context: ./flask
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     env_file:
       - .env
     ports:
