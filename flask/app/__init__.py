@@ -1,7 +1,7 @@
 from flask import Flask
 from werkzeug.middleware.proxy_fix import ProxyFix
 from .config import Config
-from .extensions import db, migrate
+from .extensions import db
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
@@ -13,7 +13,6 @@ def create_app(config_class=Config):
         app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     db.init_app(app)
-    migrate.init_app(app, db)
 
     from . import models # noqa: F401 (registers the tables for migrations)
     from .auth import AuthError, current_user
