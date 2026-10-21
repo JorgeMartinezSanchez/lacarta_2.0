@@ -1,1 +1,4 @@
+Flask==3.0.6
+PyJWT==2.15.1
+SQLAlchemy==2.0.54
 pytest==9.1.1
