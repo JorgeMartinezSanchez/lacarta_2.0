@@ -4,7 +4,7 @@ from flask import Blueprint, abort, flash, redirect, render_template, request, u
 from sqlalchemy.exc import IntegrityError
 
 from .models import db, Restaurante, Plato, Pedido, ItemPedido
-from .auth import require_auth
+from .auth import requires_auth
 from .extensions import db
 
 bp = Blueprint("restaurantes", __name__, url_prefix="/restaurantes")
