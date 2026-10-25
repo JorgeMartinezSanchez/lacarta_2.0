@@ -2,6 +2,7 @@ from flask import Flask
 from werkzeug.middleware.proxy_fix import ProxyFix
 from .config import Config
 from .extensions import db
+
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
@@ -20,12 +21,12 @@ def create_app(config_class=Config):
     from .auth.oauth import init_auth0
     from .auth.routes import bp as auth_bp
     from .auth.tokens import jwks_client
-    from .routes import bp as todos_bp
+    from .routes import bp as bp_restaurants
 
     init_auth0(app)
     # One key client per app, so its cache lives as long as the process.
     app.extensions["auth0_jwks"] = jwks_client(app.config["AUTH0_DOMAIN"])
-    app.register_blueprint(todos_bp)
+    app.register_blueprint(bp_restaurants)
     app.register_blueprint(auth_bp)
     app.register_error_handler(AuthError, handle_auth_error)
     @app.context_processor
