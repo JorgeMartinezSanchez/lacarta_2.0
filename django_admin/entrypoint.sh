@@ -18,6 +18,7 @@ python manage.py createsuperuser --noinput 2>/dev/null || echo "Superusuario ya 
 echo "==> Recolectando estáticos..."
 python manage.py collectstatic --noinput || true
 
+echo "==> Inicializando datos de prueba..."
 python manage.py shell <<'EOF'
 from django.db import connection
 with connection.cursor() as c:
