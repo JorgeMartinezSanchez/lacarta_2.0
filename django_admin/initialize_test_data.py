@@ -5,7 +5,8 @@ try:
         sql = f.read()
 
     with connection.cursor() as c:
-        c.execute("SELECT COUNT(*) FROM content.restaurantes")
+        # Verificar si hay datos en la tabla (no si existe)
+        c.execute("SELECT COUNT(*) FROM content.restaurantes;")
         if c.fetchone()[0] > 0:
             print("La tabla ya tiene datos, se omite la carga.")
         else:

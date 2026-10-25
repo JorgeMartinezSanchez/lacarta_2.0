@@ -8,18 +8,17 @@ db   = os.environ["POSTGRES_DB"]
 
 for i in range(30):
     try:
-        conn = psycopg.connect(host=host, user=user, password=pwd, dbname=db, connect_timeout=2)
-        print("    ✔ PostgreSQL listo")
-
-        cur = conn.cursor()
-        print(" Creando esquema \"content\" ... ")
-        cur.execute("CREATE SCHEMA IF NOT EXISTS content;")
-        print("     ✔ Esquema \"content\" creado")
-        cur.close()
-        
+        with psycopg.connect(host=host, user=user, password=pwd, dbname=db, connect_timeout=2) as conn:
+            print("    ✔ PostgreSQL listo")
+            with conn.cursor() as cur:
+                print(' Creando esquema "content" ... ')
+                cur.execute("CREATE SCHEMA IF NOT EXISTS content AUTHORIZATION CURRENT_USER;")
+                print('     ✔ Esquema "content" creado')
+            # al salir del with, se hace commit automáticamente
         sys.exit(0)
     except Exception as e:
         print(f"    ... intento {i+1}/30: {e}")
         time.sleep(2)
-print("    ✘ No se pudo conectar a PostgreSQL o crear el esquema \"content\"", file=sys.stderr)
+
+print('    ✘ No se pudo conectar a PostgreSQL o crear el esquema "content"', file=sys.stderr)
 sys.exit(1)

@@ -80,9 +80,6 @@ DATABASES = {"default": {
     "NAME": os.environ["POSTGRES_DB"], "USER": os.environ["POSTGRES_USER"],
     "PASSWORD": os.environ["POSTGRES_PASSWORD"],
     "HOST": os.environ.get("POSTGRES_HOST", "db"), "PORT": "5432",
-    "OPTIONS": {
-        'options': '-c search_path=content,public'
-    },
 }}
 
 

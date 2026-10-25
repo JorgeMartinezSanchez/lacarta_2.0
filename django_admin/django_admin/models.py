@@ -8,7 +8,7 @@ class Restaurante(models.Model):
     telefono = models.CharField(max_length=30, blank=True, null=True)
 
     class Meta:
-        db_table = "restaurantes"
+        db_table = 'content"."restaurantes' # "restaurantes"
         verbose_name = "Restaurante"
         verbose_name_plural = "Restaurantes"
 
@@ -28,7 +28,7 @@ class Plato(models.Model):
     )
 
     class Meta:
-        db_table = "platos"
+        db_table = 'content"."platos' # "platos"
         verbose_name = "Plato"
         verbose_name_plural = "Platos"
 
@@ -50,7 +50,7 @@ class Pedido(models.Model):
     )
 
     class Meta:
-        db_table = "pedido"
+        db_table = 'content"."pedido' # "pedido"
         verbose_name = "Pedido"
         verbose_name_plural = "Pedidos"
 
@@ -80,7 +80,7 @@ class ItemPedido(models.Model):
     )
 
     class Meta:
-        db_table = "item_pedido"
+        db_table = 'content"."item_pedido' # "item_pedido"
         verbose_name = "Item de Pedido"
         verbose_name_plural = "Items de Pedido"
 
