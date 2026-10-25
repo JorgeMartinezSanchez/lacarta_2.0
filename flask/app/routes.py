@@ -12,6 +12,7 @@ bp = Blueprint("restaurantes", __name__, url_prefix="/restaurantes")
 
 # ---------- READ: listar (con filtro por ciudad) ----------
 @bp.get("/")
+@requires_auth("")
 def listar_restaurantes():
     ciudad = request.args.get("ciudad", "").strip()
     consulta = Restaurante.query.order_by(Restaurante.nombre)
@@ -113,3 +114,4 @@ def agregar_plato(restaurante_id):
     db.session.commit()
     flash("Plato agregado.", "success")
     return redirect(url_for("restaurantes.detalle_restaurante", restaurante_id=restaurante.id))
+
