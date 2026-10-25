@@ -19,16 +19,7 @@ echo "==> Recolectando estáticos..."
 python manage.py collectstatic --noinput || true
 
 echo "==> Inicializando datos de prueba..."
-python manage.py shell <<'EOF'
-from django.db import connection
-with connection.cursor() as c:
-    c.execute("SELECT COUNT(*) FROM content.restaurantes")
-    if c.fetchone()[0] == 0:
-        c.execute(open("data_test.sql", encoding="utf-8").read())
-        print("Datos de prueba cargados.")
-    else:
-        print("La tabla ya tiene datos, se omite la carga.")
-EOF
+python manage.py shell < initialize_test_data.py
 
 echo "==> Arrancando Gunicorn..."
 exec "$@"

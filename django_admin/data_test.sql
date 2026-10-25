@@ -4,7 +4,6 @@
 -- Uso:  psql -U $POSTGRES_USER -d $POSTGRES_DB -f datos_prueba.sql
 -- ============================================================
 
-BEGIN;
 
 -- Descomenta para limpiar los datos existentes y reiniciar los IDs:
 -- TRUNCATE content.item_pedido, content.pedido, content.platos, content.restaurantes RESTART IDENTITY CASCADE;
@@ -125,5 +124,3 @@ SELECT setval(pg_get_serial_sequence('content.restaurantes', 'id'), (SELECT MAX(
 SELECT setval(pg_get_serial_sequence('content.platos',       'id'), (SELECT MAX(id) FROM content.platos));
 SELECT setval(pg_get_serial_sequence('content.pedido',       'id'), (SELECT MAX(id) FROM content.pedido));
 SELECT setval(pg_get_serial_sequence('content.item_pedido',  'id'), (SELECT COALESCE(MAX(id), 1) FROM content.item_pedido));
-
-COMMIT;
