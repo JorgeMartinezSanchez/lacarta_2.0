@@ -2,26 +2,7 @@
 set -e
 
 echo "==> Esperando a PostgreSQL en ${POSTGRES_HOST:-db}:5432..."
-python - <<'PY'
-import os, sys, time
-import psycopg
-
-host = os.environ.get("POSTGRES_HOST")
-user = os.environ["POSTGRES_USER"]
-pwd  = os.environ["POSTGRES_PASSWORD"]
-db   = os.environ["POSTGRES_DB"]
-
-for i in range(30):
-    try:
-        psycopg.connect(host=host, user=user, password=pwd, dbname=db, connect_timeout=2).close()
-        print("    ✔ PostgreSQL listo")
-        sys.exit(0)
-    except Exception as e:
-        print(f"    ... intento {i+1}/30: {e}")
-        time.sleep(2)
-print("    ✘ No se pudo conectar a PostgreSQL", file=sys.stderr)
-sys.exit(1)
-PY
+python initialize_con.py
 
 echo "==> Aplicando migraciones..."
 python manage.py makemigrations --noinput
@@ -36,6 +17,17 @@ python manage.py createsuperuser --noinput 2>/dev/null || echo "Superusuario ya 
 
 echo "==> Recolectando estáticos..."
 python manage.py collectstatic --noinput || true
+
+python manage.py shell <<'EOF'
+from django.db import connection
+with connection.cursor() as c:
+    c.execute("SELECT COUNT(*) FROM content.restaurantes")
+    if c.fetchone()[0] == 0:
+        c.execute(open("data_test.sql", encoding="utf-8").read())
+        print("Datos de prueba cargados.")
+    else:
+        print("La tabla ya tiene datos, se omite la carga.")
+EOF
 
 echo "==> Arrancando Gunicorn..."
 exec "$@"
