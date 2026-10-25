@@ -8,7 +8,7 @@ db   = os.environ["POSTGRES_DB"]
 
 for i in range(30):
     try:
-        conn = psycopg.connect(host=host, user=user, password=pwd, dbname=db, connect_timeout=2).close()
+        conn = psycopg.connect(host=host, user=user, password=pwd, dbname=db, connect_timeout=2)
         print("    ✔ PostgreSQL listo")
 
         cur = conn.cursor()

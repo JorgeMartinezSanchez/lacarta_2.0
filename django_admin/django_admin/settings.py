@@ -43,7 +43,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # permite la carga de static files de django
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -80,6 +80,9 @@ DATABASES = {"default": {
     "NAME": os.environ["POSTGRES_DB"], "USER": os.environ["POSTGRES_USER"],
     "PASSWORD": os.environ["POSTGRES_PASSWORD"],
     "HOST": os.environ.get("POSTGRES_HOST", "db"), "PORT": "5432",
+    "OPTIONS": {
+        'options': '-c search_path=content,public'
+    },
 }}
 
 
