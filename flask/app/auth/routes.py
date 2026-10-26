@@ -20,23 +20,20 @@ def login():
     """
     session["next"] = safe_next(request.args.get("next"))
     return auth0().authorize_redirect(
-        redirect_uri=url_for("auth.callback", _external=True),
+        redirect_uri=url_for("auth.signin", _external=True),
         audience=current_app.config["AUTH0_AUDIENCE"],
     )
 
 @bp.route("/callback")
 def callback():
-    """Auth0 sends the browser back here with a one-time code.
-    Authlib exchanges the code for the tokens, server to server and with the
-    client secret, so the tokens never pass through the browser's address bar.
-    """
     try:
         token = auth0().authorize_access_token()
     except OAuthError as err:
         flash(f"Auth0: {err.description or err.error}", "error")
-        return redirect(url_for("todos.index"))
-    
-    next_url = session.pop("next", None) or url_for("todos.index")
+        return redirect(url_for("restaurantes.listar_restaurantes"))  # ✅
+
+    next_url = session.pop("next", None) or url_for("restaurantes.listar_restaurantes")
+
     profile = token.get("userinfo") or {}
     session.clear() # a new login starts a new session: nothing from before survives
     session["access_token"] = token["access_token"]
@@ -46,13 +43,9 @@ def callback():
 
 @bp.post("/logout")
 def logout():
-    """Forget the session here, then close the session Auth0 keeps on its page.
-    Without the second step, "Sign in" would log the same user back in
-    without asking. POST, so a link or an image on another site cannot do it.
-    """
     session.clear()
     params = urlencode({
-    "returnTo": url_for("todos.index", _external=True),
-    "client_id": current_app.config["AUTH0_CLIENT_ID"],
+        "returnTo": url_for("restaurantes.listar_restaurantes", _external=True),  # ✅
+        "client_id": current_app.config["AUTH0_CLIENT_ID"],
     })
     return redirect(f"https://{current_app.config['AUTH0_DOMAIN']}/v2/logout?{params}")
