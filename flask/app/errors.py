@@ -1,6 +1,5 @@
 from flask import render_template
 from .extensions import db
-from . import create_app
 
 def register_error_handlers(app):
     """Registra los manejadores de errores personalizados de la app"""

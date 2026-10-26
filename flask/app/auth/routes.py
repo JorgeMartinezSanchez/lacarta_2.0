@@ -9,7 +9,7 @@ def safe_next(target):
     """Only allow redirects to paths inside this site (no open redirect)."""
     if target and target.startswith("/") and not target.startswith("//") and "\\" not in target:
         return target
-    return url_for("todos.index")
+    return url_for("auth.login")
 
 @bp.route("/login")
 def login():
@@ -20,8 +20,8 @@ def login():
     """
     session["next"] = safe_next(request.args.get("next"))
     return auth0().authorize_redirect(
-    redirect_uri=url_for("auth.callback", _external=True),
-    audience=current_app.config["AUTH0_AUDIENCE"],
+        redirect_uri=url_for("auth.callback", _external=True),
+        audience=current_app.config["AUTH0_AUDIENCE"],
     )
 
 @bp.route("/callback")

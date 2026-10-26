@@ -21,12 +21,15 @@ def create_app(config_class=Config):
     from .auth.oauth import init_auth0
     from .auth.routes import bp as auth_bp
     from .auth.tokens import jwks_client
-    from .routes import bp as bp_restaurants
+
+    from .errors import register_error_handlers
+
+    from .routes import restaurant_bp 
 
     init_auth0(app)
     # One key client per app, so its cache lives as long as the process.
     app.extensions["auth0_jwks"] = jwks_client(app.config["AUTH0_DOMAIN"])
-    app.register_blueprint(bp_restaurants)
+    app.register_blueprint(restaurant_bp )
     app.register_blueprint(auth_bp)
     app.register_error_handler(AuthError, handle_auth_error)
     @app.context_processor
@@ -34,4 +37,7 @@ def create_app(config_class=Config):
     # For the navbar and to hide buttons the user cannot use. Hiding is
     # UX only: the decorator on each route is what protects it.
         return {"current_user": current_user()}
+
+    register_error_handlers(app)
+
     return app
