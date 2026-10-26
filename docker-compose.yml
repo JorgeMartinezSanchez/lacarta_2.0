@@ -45,11 +45,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-    depends_on:
-      django:
-        condition: service_healthy
-      flask:
-        condition: service_healthy
 
 volumes:
   pg_data:
