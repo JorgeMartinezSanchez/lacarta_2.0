@@ -20,7 +20,7 @@ def login():
     """
     session["next"] = safe_next(request.args.get("next"))
     return auth0().authorize_redirect(
-        redirect_uri=url_for("auth.login", _external=True),
+        redirect_uri=url_for("auth.callback", _external=True),
         audience=current_app.config["AUTH0_AUDIENCE"],
     )
 
