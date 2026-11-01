@@ -14,7 +14,7 @@ class Config:
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE")
 
-    BEHIND_PROXY = os.environ.get("BEHIND_PROXY", "0") == "1"
+    BEHIND_PROXY = os.environ.get("BEHIND_PROXY")
 
     # Auth0
     AUTH0_DOMAIN = os.environ.get("AUTH0_DOMAIN")
