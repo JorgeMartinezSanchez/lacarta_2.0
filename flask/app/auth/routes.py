@@ -22,6 +22,7 @@ def login():
     return auth0().authorize_redirect(
         redirect_uri=url_for("auth.callback", _external=True),
         audience=current_app.config["AUTH0_AUDIENCE"],
+        prompt="login"
     )
 
 @bp.route("/callback")
