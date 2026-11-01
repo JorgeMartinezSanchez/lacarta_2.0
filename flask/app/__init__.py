@@ -40,4 +40,8 @@ def create_app(config_class=Config):
 
     register_error_handlers(app)
 
+    @app.route('/health')
+    def health():
+        return 'OK', 200
+
     return app
