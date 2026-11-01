@@ -40,7 +40,7 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1/"]
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1/restaurantes"]
       interval: 30s
       timeout: 10s
       retries: 3
