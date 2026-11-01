@@ -3,3 +3,4 @@
 tree.txt
 .ec2_keys/
 commands_for_ec2_instance.txt
+setup*.sh
