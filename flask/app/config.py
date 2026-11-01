@@ -12,7 +12,7 @@ class Config:
     # Sesión (cookie firmada que guarda el access token de Auth0)
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
-    SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "0") == "1"
+    SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE")
 
     BEHIND_PROXY = os.environ.get("BEHIND_PROXY", "0") == "1"
 
