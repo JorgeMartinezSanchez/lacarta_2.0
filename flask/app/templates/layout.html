@@ -9,7 +9,18 @@
     <header>
         <nav>
             <a href="{{ url_for('restaurantes.listar_restaurantes') }}">Restaurantes</a>
-        </nav>
+
+            {% if current_user %}
+                <span style="margin-left: 1rem;">
+                    Hola, {{ current_user.name }}
+                </span>
+                <form action="{{ url_for('auth.logout') }}" method="POST" style="display:inline; margin-left: 1rem;">
+                    <button type="submit">Cerrar sesión</button>
+                </form>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" style="margin-left: 1rem;">Iniciar sesión</a>
+            {% endif %}
+                </nav>
         <hr>
     </header>
 
