@@ -13,15 +13,17 @@ def safe_next(target):
 
 @bp.route("/login")
 def login():
-    """Send the browser to Auth0's login page.
-    `audience` asks Auth0 for an access token for our API, which carries the
-    user's permissions. Authlib adds a random `state` and checks it on the
-    way back, so a login started elsewhere cannot be injected.
-    """
+    """Send the browser to Auth0's login page."""
     session["next"] = safe_next(request.args.get("next"))
+    
+    # Lee el parámetro de la URL para forzar el login
+    force_login = request.args.get("force") == "1"
+    
     return auth0().authorize_redirect(
         redirect_uri=url_for("auth.callback", _external=True),
         audience=current_app.config["AUTH0_AUDIENCE"],
+        # Añade prompt solo si se solicita explícitamente
+        prompt="login" if force_login else None 
     )
 
 @bp.route("/callback")
