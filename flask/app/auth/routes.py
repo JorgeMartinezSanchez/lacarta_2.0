@@ -31,8 +31,9 @@ def callback():
     try:
         token = auth0().authorize_access_token()
     except OAuthError as err:
+        current_app.logger.error("Auth0 callback error: %s - %s", err.error, err.description)
         flash(f"Auth0: {err.description or err.error}", "error")
-        return redirect(url_for("restaurantes.listar_restaurantes"))  # ✅
+        return redirect(url_for("restaurantes.listar_restaurantes"))
 
     next_url = session.pop("next", None) or url_for("restaurantes.listar_restaurantes")
 
