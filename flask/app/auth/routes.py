@@ -31,8 +31,9 @@ def callback():
     try:
         token = auth0().authorize_access_token()
     except OAuthError as err:
+        if err.error == "mismatching_state" and session.get("user"):
+            return redirect(url_for("restaurantes.listar_restaurantes"))
         current_app.logger.error("Auth0 callback error: %s - %s", err.error, err.description)
-        current_app.logger.info("redirect_uri: %s", url_for("auth.callback", _external=True))
         flash(f"Auth0: {err.description or err.error}", "error")
         return redirect(url_for("restaurantes.listar_restaurantes"))
 
