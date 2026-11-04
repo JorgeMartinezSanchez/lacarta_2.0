@@ -12,7 +12,7 @@ bp = Blueprint("restaurantes", __name__, url_prefix="/restaurantes")
 
 # ---------- READ: listar (con filtro por ciudad) ----------
 @bp.get("/")
-def listar_restaurantes():
+def listar_restaurantes(payload):
     ciudad = request.args.get("ciudad", "").strip()
     consulta = Restaurante.query.order_by(Restaurante.nombre)
     if ciudad:
