@@ -6,10 +6,9 @@ from .oauth import auth0
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 def safe_next(target):
-    """Only allow redirects to paths inside this site (no open redirect)."""
     if target and target.startswith("/") and not target.startswith("//") and "\\" not in target:
         return target
-    return url_for("auth.login")
+    return url_for("restaurantes.listar_restaurantes")
 
 @bp.route("/login")
 def login():
