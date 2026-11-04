@@ -1,13 +1,20 @@
 {% extends "layout.html" %}
-{% block title %}Sign in{% endblock %}
-{% block content %}
+
+{% block titulo %}Iniciar sesión{% endblock %}
+
+{% block contenido %}
     <section class="card auth-card">
         <h2>Sign in</h2>
         <p>Auth0 shows the sign-in and sign-up page, then sends you back here.</p>
-        <a href="{{ url_for('auth.login', next=next) }}" class="btn btn-primary">Sign in with Auth0</a>
-        <a href="{{ url_for('auth.login', force='1') }}" class="btn btn-secondary">Sign in with a different account</a>
 
-        {# Si ya hay un token en la cookie pero falló la verificación, permite limpiarlo #}
+        <a href="{{ url_for('auth.login', next=next) }}" class="btn btn-primary">
+            Sign in with Auth0
+        </a>
+
+        <a href="{{ url_for('auth.login', force='1') }}" class="btn btn-secondary">
+            Sign in with a different account
+        </a>
+
         <form action="{{ url_for('auth.logout') }}" method="POST" style="margin-top: 1rem;">
             <button type="submit" class="btn">Clear session</button>
         </form>
