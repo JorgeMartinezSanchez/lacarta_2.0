@@ -10,7 +10,6 @@ from .models import Restaurante, Plato, Pedido, ItemPedido
 bp = Blueprint("api", __name__, url_prefix="/api")
 
 @bp.get("/restaurantes")
-@require_auth("create")
 def get_restaurantes():
     restaurantes = Restaurante.query.all()
     return jsonify([{
@@ -22,7 +21,6 @@ def get_restaurantes():
     } for r in restaurantes])
 
 @bp.get("/restaurantes/<int:restaurante_id>/platos")
-@require_auth
 def get_platos(restaurante_id):
     platos = Plato.query.filter_by(restaurante_id=restaurante_id).all()
     return jsonify([{
@@ -33,7 +31,6 @@ def get_platos(restaurante_id):
     } for p in platos])
 
 @bp.post("/pedidos")
-@require_auth
 def create_pedido():
     try:
         data = request.get_json() or {}
