@@ -22,7 +22,7 @@ def listar_restaurantes():
 
 # ---------- READ: detalle ----------
 @bp.get("/<int:restaurante_id>")
-def detalle_restaurante(restaurante_id):
+def detalle_restaurante(payload, restaurante_id):
     restaurante = db.get_or_404(Restaurante, restaurante_id)
     return render_template("restaurantes/detalle.html", restaurante=restaurante)
 
@@ -30,7 +30,7 @@ def detalle_restaurante(restaurante_id):
 # ---------- CREATE ----------
 @bp.route("/nuevo", methods=["GET", "POST"])
 @requires_auth("write:carta")
-def crear_restaurante():
+def crear_restaurante(payload):
     if request.method == "POST":
         nombre = request.form.get("nombre", "").strip()
         ciudad = request.form.get("ciudad", "").strip()
@@ -55,7 +55,7 @@ def crear_restaurante():
 # ---------- UPDATE ----------
 @bp.route("/<int:restaurante_id>/editar", methods=["GET", "POST"])
 @requires_auth("write:carta")
-def editar_restaurante(restaurante_id):
+def editar_restaurante(payload, restaurante_id):
     restaurante = db.get_or_404(Restaurante, restaurante_id)
 
     if request.method == "POST":
@@ -79,7 +79,7 @@ def editar_restaurante(restaurante_id):
 # ---------- DELETE (solo POST) ----------
 @bp.post("/<int:restaurante_id>/eliminar")
 @requires_auth("delete:carta")
-def eliminar_restaurante(restaurante_id):
+def eliminar_restaurante(payload, restaurante_id):
     restaurante = db.get_or_404(Restaurante, restaurante_id)
     try:
         db.session.delete(restaurante)
@@ -95,7 +95,7 @@ def eliminar_restaurante(restaurante_id):
 # ---------- CREATE: plato dentro de un restaurante ----------
 @bp.post("/<int:restaurante_id>/platos")
 @requires_auth("write:carta")
-def agregar_plato(restaurante_id):
+def agregar_plato(payload, restaurante_id):
     restaurante = db.get_or_404(Restaurante, restaurante_id)
 
     nombre = request.form.get("nombre", "").strip()
