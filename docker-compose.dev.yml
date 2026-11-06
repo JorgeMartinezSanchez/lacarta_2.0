@@ -31,7 +31,9 @@ services:
         condition: service_healthy
 
   django:
-    build: ./django_admin
+    build:
+      context: ./django_admin
+      dockerfile: Dockerfile.dev
     env_file: .env
     ports: ["8000:8000"]
     volumes: ["./django_admin:/app"]
