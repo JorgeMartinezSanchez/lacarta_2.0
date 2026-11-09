@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+
+{% block titulo %}Detalle de {{ plato.nombre }}{% endblock %}
+
+{% block contenido %}
+    <h1>{{ plato.nombre }}</h1>
+    <p><strong>Precio:</strong> ${{ "%.2f"|format(plato.precio) }}</p>
+    <p>
+        <strong>Disponibilidad:</strong>
+        {% if plato.disponible %}
+            <span style="color: green;">Disponible</span>
+        {% else %}
+            <span style="color: gray;">No disponible</span>
+        {% endif %}
+    </p>
+    <p>
+        <strong>Restaurante:</strong>
+        <a href="{{ url_for('restaurantes.detalle_restaurante', restaurante_id=plato.restaurante_id) }}">
+            {{ plato.restaurante.nombre }}
+        </a>
+    </p>
+
+    <p>
+        <a href="{{ url_for('platos.editar_plato', plato_id=plato.id) }}">Editar Plato</a>
+
+        <form action="{{ url_for('platos.eliminar_plato', plato_id=plato.id) }}"
+              method="POST" style="display:inline;"
+              onsubmit="return confirm('¿Estás seguro de eliminar este plato?');">
+            <button type="submit" style="color: red;">Eliminar Plato</button>
+        </form>
+    </p>
+
+    <p><br><a href="{{ url_for('platos.listar_platos') }}">Volver al listado de platos</a></p>
+{% endblock %}

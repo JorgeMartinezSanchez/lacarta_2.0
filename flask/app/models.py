@@ -18,6 +18,12 @@ class Restaurante(db.Model):
         order_by="Plato.nombre",
     )
 
+    pedidos = db.relationship(
+        "Pedido",
+        backref="restaurante",
+        cascade="all, delete-orphan",
+        order_by="Pedido.fecha.desc()",
+    )
 
 class Plato(db.Model):
   __tablename__ = "platos"
@@ -47,6 +53,8 @@ class Pedido(db.Model):
   estado = db.Column(db.String(120), nullable=False, default="pendiente")
   fecha = db.Column(db.Date, nullable=False)
   total = db.Column(db.Numeric(10, 2))
+  items = db.relationship("ItemPedido", backref="pedido",
+                        cascade="all, delete-orphan")
 
 
 class ItemPedido(db.Model):
@@ -67,3 +75,4 @@ class ItemPedido(db.Model):
       db.ForeignKey("content.restaurantes.id"),
       nullable=False,
   )
+  plato = db.relationship("Plato")

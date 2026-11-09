@@ -1,0 +1,116 @@
+{% extends "layout.html" %}
+
+{% block titulo %}Detalle del Pedido #{{ pedido.id }}{% endblock %}
+
+{% block contenido %}
+    <h1>Pedido #{{ pedido.id }}</h1>
+
+    <p>
+        <strong>Restaurante:</strong>
+        <a href="{{ url_for('restaurantes.detalle_restaurante', restaurante_id=pedido.restaurante_id) }}">
+            {{ pedido.restaurante.nombre }}
+        </a>
+    </p>
+    <p><strong>Fecha:</strong> {{ pedido.fecha.strftime('%Y-%m-%d') }}</p>
+    <p>
+        <strong>Estado actual:</strong> {{ pedido.estado }}
+    </p>
+    <p>
+        <strong>Total:</strong>
+        {% if pedido.total is not none %}
+            ${{ "%.2f"|format(pedido.total) }}
+        {% else %}
+            $0.00
+        {% endif %}
+    </p>
+
+    <hr>
+
+    <h2>Cambiar estado</h2>
+    <form action="{{ url_for('pedidos.actualizar_estado', pedido_id=pedido.id) }}" method="POST">
+        <select name="estado" required>
+            {% for opcion in ['pendiente', 'en preparación', 'entregado', 'cancelado'] %}
+                <option value="{{ opcion }}" {% if pedido.estado == opcion %}selected{% endif %}>
+                    {{ opcion }}
+                </option>
+            {% endfor %}
+        </select>
+        <button type="submit">Actualizar estado</button>
+    </form>
+
+    <hr>
+
+    <h2>Items del pedido</h2>
+    {% set items = pedido.items if pedido.items is defined else [] %}
+    {% if items %}
+        <table border="1" cellpadding="5" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Plato</th>
+                    <th>Cantidad</th>
+                    <th>Precio unitario</th>
+                    <th>Subtotal</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.plato.nombre }}</td>
+                    <td>{{ item.cantidad }}</td>
+                    <td>${{ "%.2f"|format(item.precio_unitario) }}</td>
+                    <td>${{ "%.2f"|format(item.precio_unitario * item.cantidad|float) }}</td>
+                    <td>
+                        <form action="{{ url_for('items_pedido.eliminar_item', item_id=item.id) }}"
+                              method="POST" style="display:inline;"
+                              onsubmit="return confirm('¿Eliminar este item?');">
+                            <button type="submit" style="color: red;">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Este pedido aún no tiene items.</p>
+    {% endif %}
+
+    <h3>Agregar item</h3>
+    {% if pedido.restaurante.platos %}
+        <form action="{{ url_for('items_pedido.agregar_item', pedido_id=pedido.id) }}" method="POST">
+            <div>
+                <label for="plato_id">Plato:*</label><br>
+                <select id="plato_id" name="plato_id" required>
+                    {% for plato in pedido.restaurante.platos %}
+                        {% if plato.disponible %}
+                            <option value="{{ plato.id }}">
+                                {{ plato.nombre }} — ${{ "%.2f"|format(plato.precio) }}
+                            </option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <br>
+            <div>
+                <label for="cantidad">Cantidad:*</label><br>
+                <input type="number" id="cantidad" name="cantidad" min="0.01" step="0.01" value="1" required>
+            </div>
+            <br>
+            <button type="submit">Agregar al pedido</button>
+        </form>
+    {% else %}
+        <p>El restaurante no tiene platos disponibles para agregar.</p>
+    {% endif %}
+
+    <hr>
+
+    <p>
+        <form action="{{ url_for('pedidos.eliminar_pedido', pedido_id=pedido.id) }}"
+              method="POST" style="display:inline;"
+              onsubmit="return confirm('¿Estás seguro de eliminar este pedido?');">
+            <button type="submit" style="color: red;">Eliminar Pedido</button>
+        </form>
+    </p>
+
+    <p><br><a href="{{ url_for('pedidos.listar_pedidos') }}">Volver al listado de pedidos</a></p>
+{% endblock %}

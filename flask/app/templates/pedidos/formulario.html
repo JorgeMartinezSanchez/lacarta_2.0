@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block titulo %}{% if pedido %}Editar Pedido{% else %}Nuevo Pedido{% endif %}{% endblock %}
+
+{% block contenido %}
+    <h1>{% if pedido %}Editar Pedido #{{ pedido.id }}{% else %}Crear Nuevo Pedido{% endif %}</h1>
+
+    <form action="{% if pedido %}{{ url_for('pedidos.crear_pedido') }}{% else %}{{ url_for('pedidos.crear_pedido') }}{% endif %}"
+          method="POST">
+        <div>
+            <label for="restaurante_id">Restaurante:*</label><br>
+            <select id="restaurante_id" name="restaurante_id" required>
+                <option value="">— Selecciona un restaurante —</option>
+                {% for r in restaurantes %}
+                    <option value="{{ r.id }}"
+                        {% if pedido and pedido.restaurante_id == r.id %}selected{% endif %}>
+                        {{ r.nombre }} ({{ r.ciudad }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <br>
+
+        <div>
+            <label for="estado">Estado:</label><br>
+            <select id="estado" name="estado">
+                {% for opcion in ['pendiente', 'en preparación', 'entregado', 'cancelado'] %}
+                    <option value="{{ opcion }}"
+                        {% if pedido and pedido.estado == opcion %}selected{% endif %}>
+                        {{ opcion }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <br>
+
+        <button type="submit">{% if pedido %}Guardar Cambios{% else %}Crear Pedido{% endif %}</button>
+    </form>
+
+    <p><br><a href="{{ url_for('pedidos.listar_pedidos') }}">Cancelar / Volver</a></p>
+{% endblock %}

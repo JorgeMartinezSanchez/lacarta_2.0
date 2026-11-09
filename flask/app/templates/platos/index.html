@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+
+{% block titulo %}Lista de Platos{% endblock %}
+
+{% block contenido %}
+    <h1>Platos</h1>
+
+    <form method="GET" action="{{ url_for('platos.listar_platos') }}">
+        <label for="restaurante_id">Filtrar por restaurante (ID):</label>
+        <input type="number" id="restaurante_id" name="restaurante_id"
+               value="{{ request.args.get('restaurante_id', '') }}" min="1">
+        <button type="submit">Filtrar</button>
+        {% if request.args.get('restaurante_id') %}
+            <a href="{{ url_for('platos.listar_platos') }}">Limpiar filtro</a>
+        {% endif %}
+    </form>
+    <br>
+
+    {% if platos %}
+        <table border="1" cellpadding="5" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Precio</th>
+                    <th>Disponible</th>
+                    <th>Restaurante</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for plato in platos %}
+                <tr>
+                    <td>{{ plato.nombre }}</td>
+                    <td>${{ "%.2f"|format(plato.precio) }}</td>
+                    <td>
+                        {% if plato.disponible %}
+                            <span style="color: green;">Sí</span>
+                        {% else %}
+                            <span style="color: gray;">No</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('restaurantes.detalle_restaurante', restaurante_id=plato.restaurante_id) }}">
+                            {{ plato.restaurante.nombre }}
+                        </a>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('platos.detalle_plato', plato_id=plato.id) }}">Ver detalle</a>
+                        | <a href="{{ url_for('platos.editar_plato', plato_id=plato.id) }}">Editar</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No hay platos registrados.</p>
+    {% endif %}
+
+    <p><br><a href="{{ url_for('restaurantes.listar_restaurantes') }}">Volver a restaurantes</a></p>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block titulo %}Lista de Pedidos{% endblock %}
+
+{% block contenido %}
+    <h1>Pedidos</h1>
+
+    <form method="GET" action="{{ url_for('pedidos.listar_pedidos') }}">
+        <label for="estado">Filtrar por estado:</label>
+        <input type="text" id="estado" name="estado"
+               value="{{ request.args.get('estado', '') }}"
+               placeholder="pendiente, en preparación, entregado...">
+        <button type="submit">Filtrar</button>
+        {% if request.args.get('estado') %}
+            <a href="{{ url_for('pedidos.listar_pedidos') }}">Limpiar filtro</a>
+        {% endif %}
+    </form>
+    <br>
+
+    <p>
+        <a href="{{ url_for('pedidos.crear_pedido') }}">Crear nuevo pedido</a>
+    </p>
+
+    {% if pedidos %}
+        <table border="1" cellpadding="5" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Restaurante</th>
+                    <th>Estado</th>
+                    <th>Total</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pedido in pedidos %}
+                <tr>
+                    <td>{{ pedido.id }}</td>
+                    <td>{{ pedido.fecha.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <a href="{{ url_for('restaurantes.detalle_restaurante', restaurante_id=pedido.restaurante_id) }}">
+                            {{ pedido.restaurante.nombre }}
+                        </a>
+                    </td>
+                    <td>{{ pedido.estado }}</td>
+                    <td>
+                        {% if pedido.total is not none %}
+                            ${{ "%.2f"|format(pedido.total) }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('pedidos.detalle_pedido', pedido_id=pedido.id) }}">Ver detalle</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No hay pedidos registrados.</p>
+    {% endif %}
+{% endblock %}
