@@ -8,12 +8,12 @@
     <p><strong>Dirección:</strong> {{ restaurante.direccion or 'No especificada' }}</p>
     <p><strong>Teléfono:</strong> {{ restaurante.telefono or 'No especificado' }}</p>
 
-    <!-- Botones de editar y eliminar restaurante -->
     <p>
         <a href="{{ url_for('restaurantes.editar_restaurante', restaurante_id=restaurante.id) }}">Editar Restaurante</a>
-        
-        <!-- El eliminar se realiza por POST (Requisito 7: No debe ser accesible por GET) -->
-        <form action="{{ url_for('restaurantes.eliminar_restaurante', restaurante_id=restaurante.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar este restaurante y todos sus platos?');">
+
+        <form action="{{ url_for('restaurantes.eliminar_restaurante', restaurante_id=restaurante.id) }}"
+              method="POST" style="display:inline;"
+              onsubmit="return confirm('¿Estás seguro de eliminar este restaurante y todos sus platos?');">
             <button type="submit" style="color: red;">Eliminar Restaurante</button>
         </form>
     </p>
@@ -21,19 +21,26 @@
     <hr>
 
     <h2>Platos del Restaurante</h2>
-    
-    <!-- Listado de platos -->
+
     {% if restaurante.platos %}
         <ul>
             {% for plato in restaurante.platos %}
                 <li>
-                    <strong>{{ plato.nombre }}</strong> - ${{ "%.2f"|format(plato.precio) }} 
+                    <strong>{{ plato.nombre }}</strong> - ${{ "%.2f"|format(plato.precio) }}
                     {% if plato.disponible %}
                         <span style="color: green;">(Disponible)</span>
                     {% else %}
                         <span style="color: gray;">(No disponible)</span>
                     {% endif %}
-                    <button>Order</button>
+
+                    {% if plato.disponible %}
+                        {# Requisito: botón Order -> crea pedido para este restaurante #}
+                        <a href="{{ url_for('pedidos.crear_pedido', restaurante_id=restaurante.id) }}">
+                            <button type="button">Order</button>
+                        </a>
+                    {% else %}
+                        <button type="button" disabled title="Plato no disponible">Order</button>
+                    {% endif %}
                 </li>
             {% endfor %}
         </ul>
@@ -42,7 +49,6 @@
     {% endif %}
 
     <h3>Agregar un nuevo plato</h3>
-    <!-- Requisito 8: POST /restaurantes/<id>/platos -->
     <form action="{{ url_for('platos.agregar_plato', restaurante_id=restaurante.id) }}" method="POST">
         <div>
             <label for="nombre">Nombre del plato:</label><br>

@@ -39,14 +39,19 @@ def crear_pedido(payload):
             restaurante_id=restaurante.id,
             estado=request.form.get("estado", "pendiente").strip() or "pendiente",
             fecha=date.today(),
+            total=None,
         )
         db.session.add(pedido)
         db.session.commit()
         flash("Pedido creado.", "success")
         return redirect(url_for("pedidos.detalle_pedido", pedido_id=pedido.id))
 
+    # GET: permitir preseleccionar restaurante vía ?restaurante_id=
+    restaurante_preseleccionado = request.args.get("restaurante_id", type=int)
+
     return render_template("pedidos/formulario.html",
                            pedido=None,
+                           restaurante_preseleccionado=restaurante_preseleccionado,
                            restaurantes=Restaurante.query.order_by(Restaurante.nombre).all())
 
 
