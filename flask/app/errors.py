@@ -15,3 +15,7 @@ def register_error_handlers(app):
 
 class BusinessRuleError(Exception):
     """Una regla de negocio impide la operación. El mensaje se muestra al usuario."""
+
+
+class NotFoundError(BusinessRuleError):
+    """El recurso pedido no existe. La ruta puede responder con 404."""
