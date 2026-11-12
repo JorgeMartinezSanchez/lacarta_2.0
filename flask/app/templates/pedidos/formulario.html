@@ -21,19 +21,6 @@
         </div>
         <br>
 
-        <div>
-            <label for="estado">Estado:</label><br>
-            <select id="estado" name="estado">
-                {% for opcion in ['pendiente', 'en preparación', 'entregado', 'cancelado'] %}
-                    <option value="{{ opcion }}"
-                        {% if pedido and pedido.estado == opcion %}selected{% endif %}>
-                        {{ opcion }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-        <br>
-
         <button type="submit">{% if pedido %}Guardar Cambios{% else %}Crear Pedido{% endif %}</button>
     </form>
 
