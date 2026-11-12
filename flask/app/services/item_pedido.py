@@ -1,3 +1,4 @@
+import logging
 from decimal import Decimal
 
 from ..dtos.item_pedido_dtos import ItemPedidosDTO_Input, ItemPedidosDTO_Output
@@ -7,6 +8,8 @@ from ..repositories.item_pedido import ItemPedidoRepository
 from ..repositories.pedido_repository import PedidoRepository
 from ..repositories.plato_repository import PlatoRepository
 from ..state.pedidos import estado_de
+
+logger = logging.getLogger(__name__)
 
 
 class ItemPedidosService:
@@ -59,8 +62,15 @@ class ItemPedidosService:
             self.items_repo.commit()
 
             return self._to_dto(item)
-        except Exception:
+        except BusinessRuleError as e:
+            # Error esperado (validación / regla de negocio): lo ve el usuario.
             self.items_repo.rollback()
+            logger.warning("create_item(newItem=%r) rechazado: %s", newItem, e)
+            raise
+        except Exception:
+            # Error inesperado (base de datos, bug): traza completa en el log.
+            self.items_repo.rollback()
+            logger.exception("create_item(newItem=%r) falló", newItem)
             raise
         finally:
             self.items_repo.close()
@@ -84,8 +94,15 @@ class ItemPedidosService:
             self.items_repo.commit()
 
             return self._to_dto(item)
-        except Exception:
+        except BusinessRuleError as e:
+            # Error esperado (validación / regla de negocio): lo ve el usuario.
             self.items_repo.rollback()
+            logger.warning("update_item(item_id=%r, itemData=%r) rechazado: %s", item_id, itemData, e)
+            raise
+        except Exception:
+            # Error inesperado (base de datos, bug): traza completa en el log.
+            self.items_repo.rollback()
+            logger.exception("update_item(item_id=%r, itemData=%r) falló", item_id, itemData)
             raise
         finally:
             self.items_repo.close()
@@ -98,8 +115,15 @@ class ItemPedidosService:
             self.items_repo.delete(item)
             self._recalcular_total(pedido)
             self.items_repo.commit()
-        except Exception:
+        except BusinessRuleError as e:
+            # Error esperado (validación / regla de negocio): lo ve el usuario.
             self.items_repo.rollback()
+            logger.warning("delete_item(item_id=%r) rechazado: %s", item_id, e)
+            raise
+        except Exception:
+            # Error inesperado (base de datos, bug): traza completa en el log.
+            self.items_repo.rollback()
+            logger.exception("delete_item(item_id=%r) falló", item_id)
             raise
         finally:
             self.items_repo.close()

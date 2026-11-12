@@ -1,3 +1,4 @@
+import logging
 from decimal import Decimal, InvalidOperation
 
 from ..dtos.platos_dtos import PlatosDTO_Input, PlatosDTO_Output
@@ -5,6 +6,8 @@ from ..errors import BusinessRuleError, NotFoundError
 from ..models import Plato
 from ..repositories.plato_repository import PlatoRepository
 from ..repositories.restaurantes_repository import RestauranteRepository
+
+logger = logging.getLogger(__name__)
 
 
 class PlatosService:
@@ -37,8 +40,15 @@ class PlatosService:
             self.platos_repo.commit()
 
             return self._to_dto(plato)
-        except Exception:
+        except BusinessRuleError as e:
+            # Error esperado (validación / regla de negocio): lo ve el usuario.
             self.platos_repo.rollback()
+            logger.warning("create_plato(newPlato=%r) rechazado: %s", newPlato, e)
+            raise
+        except Exception:
+            # Error inesperado (base de datos, bug): traza completa en el log.
+            self.platos_repo.rollback()
+            logger.exception("create_plato(newPlato=%r) falló", newPlato)
             raise
         finally:
             self.platos_repo.close()
@@ -52,8 +62,15 @@ class PlatosService:
             self.platos_repo.commit()
 
             return self._to_dto(plato)
-        except Exception:
+        except BusinessRuleError as e:
+            # Error esperado (validación / regla de negocio): lo ve el usuario.
             self.platos_repo.rollback()
+            logger.warning("update_plato(plato_id=%r, platoData=%r) rechazado: %s", plato_id, platoData, e)
+            raise
+        except Exception:
+            # Error inesperado (base de datos, bug): traza completa en el log.
+            self.platos_repo.rollback()
+            logger.exception("update_plato(plato_id=%r, platoData=%r) falló", plato_id, platoData)
             raise
         finally:
             self.platos_repo.close()
@@ -65,8 +82,15 @@ class PlatosService:
             # el IntegrityError sube después del rollback.
             self.platos_repo.delete(plato)
             self.platos_repo.commit()
-        except Exception:
+        except BusinessRuleError as e:
+            # Error esperado (validación / regla de negocio): lo ve el usuario.
             self.platos_repo.rollback()
+            logger.warning("delete_plato(plato_id=%r) rechazado: %s", plato_id, e)
+            raise
+        except Exception:
+            # Error inesperado (base de datos, bug): traza completa en el log.
+            self.platos_repo.rollback()
+            logger.exception("delete_plato(plato_id=%r) falló", plato_id)
             raise
         finally:
             self.platos_repo.close()

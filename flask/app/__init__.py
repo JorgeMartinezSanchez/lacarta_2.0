@@ -1,9 +1,17 @@
+import logging
+import os
+
 from flask import Flask
 from werkzeug.middleware.proxy_fix import ProxyFix
 from .config import Config
 from .extensions import db
 
 def create_app(config_class=Config):
+    # Logs a la consola (docker compose logs flask). Nivel con LOG_LEVEL=DEBUG|INFO|WARNING...
+    logging.basicConfig(
+        level=os.getenv("LOG_LEVEL", "INFO").upper(),
+        format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    )
     app = Flask(__name__)
     app.config.from_object(config_class)
     for key in ("AUTH0_DOMAIN", "AUTH0_AUDIENCE", "AUTH0_CLIENT_ID", "AUTH0_CLIENT_SECRET"):

@@ -1,7 +1,10 @@
+import logging
 from ..dtos.restaurantes_dtos import RestauranteDTO_Input, RestauranteDTO_Output
 from ..errors import BusinessRuleError, NotFoundError
 from ..models import Restaurante
 from ..repositories.restaurantes_repository import RestauranteRepository
+
+logger = logging.getLogger(__name__)
 
 
 class RestaurantesService:
@@ -36,8 +39,15 @@ class RestaurantesService:
 
             # 4. Devolver un DTO
             return self._to_dto(restaurante)
-        except Exception:
+        except BusinessRuleError as e:
+            # Error esperado (validación / regla de negocio): lo ve el usuario.
             self.restaurantes_repo.rollback()
+            logger.warning("create_restaurant(newRes=%r) rechazado: %s", newRes, e)
+            raise
+        except Exception:
+            # Error inesperado (base de datos, bug): traza completa en el log.
+            self.restaurantes_repo.rollback()
+            logger.exception("create_restaurant(newRes=%r) falló", newRes)
             raise
         finally:
             self.restaurantes_repo.close()
@@ -51,8 +61,15 @@ class RestaurantesService:
             self.restaurantes_repo.commit()
 
             return self._to_dto(restaurante)
-        except Exception:
+        except BusinessRuleError as e:
+            # Error esperado (validación / regla de negocio): lo ve el usuario.
             self.restaurantes_repo.rollback()
+            logger.warning("update_restaurant(res_id=%r, resData=%r) rechazado: %s", res_id, resData, e)
+            raise
+        except Exception:
+            # Error inesperado (base de datos, bug): traza completa en el log.
+            self.restaurantes_repo.rollback()
+            logger.exception("update_restaurant(res_id=%r, resData=%r) falló", res_id, resData)
             raise
         finally:
             self.restaurantes_repo.close()
@@ -63,8 +80,15 @@ class RestaurantesService:
             # cascade="all, delete-orphan" del modelo borra también sus platos y pedidos
             self.restaurantes_repo.delete(restaurante)
             self.restaurantes_repo.commit()
-        except Exception:
+        except BusinessRuleError as e:
+            # Error esperado (validación / regla de negocio): lo ve el usuario.
             self.restaurantes_repo.rollback()
+            logger.warning("delete_restaurant(res_id=%r) rechazado: %s", res_id, e)
+            raise
+        except Exception:
+            # Error inesperado (base de datos, bug): traza completa en el log.
+            self.restaurantes_repo.rollback()
+            logger.exception("delete_restaurant(res_id=%r) falló", res_id)
             raise
         finally:
             self.restaurantes_repo.close()

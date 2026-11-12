@@ -1,3 +1,4 @@
+import logging
 from datetime import date
 
 from ..dtos.pedidos_dtos import PedidosDTO_Input, PedidosDTO_Output
@@ -6,6 +7,8 @@ from ..models import Pedido
 from ..repositories.pedido_repository import PedidoRepository
 from ..repositories.restaurantes_repository import RestauranteRepository
 from ..state.pedidos import Cancelado, Pendiente, cambiar_estado, estado_de
+
+logger = logging.getLogger(__name__)
 
 
 class PedidosService:
@@ -49,8 +52,15 @@ class PedidosService:
             self.pedidos_repo.commit()
 
             return self._to_dto(pedido)
-        except Exception:
+        except BusinessRuleError as e:
+            # Error esperado (validación / regla de negocio): lo ve el usuario.
             self.pedidos_repo.rollback()
+            logger.warning("create_pedido(newPedido=%r) rechazado: %s", newPedido, e)
+            raise
+        except Exception:
+            # Error inesperado (base de datos, bug): traza completa en el log.
+            self.pedidos_repo.rollback()
+            logger.exception("create_pedido(newPedido=%r) falló", newPedido)
             raise
         finally:
             self.pedidos_repo.close()
@@ -80,8 +90,15 @@ class PedidosService:
             self.pedidos_repo.commit()
 
             return self._to_dto(pedido)
-        except Exception:
+        except BusinessRuleError as e:
+            # Error esperado (validación / regla de negocio): lo ve el usuario.
             self.pedidos_repo.rollback()
+            logger.warning("update_pedido(pedido_id=%r, pedidoData=%r) rechazado: %s", pedido_id, pedidoData, e)
+            raise
+        except Exception:
+            # Error inesperado (base de datos, bug): traza completa en el log.
+            self.pedidos_repo.rollback()
+            logger.exception("update_pedido(pedido_id=%r, pedidoData=%r) falló", pedido_id, pedidoData)
             raise
         finally:
             self.pedidos_repo.close()
@@ -97,8 +114,15 @@ class PedidosService:
             # cascade="all, delete-orphan" del modelo borra también sus ítems
             self.pedidos_repo.delete(pedido)
             self.pedidos_repo.commit()
-        except Exception:
+        except BusinessRuleError as e:
+            # Error esperado (validación / regla de negocio): lo ve el usuario.
             self.pedidos_repo.rollback()
+            logger.warning("delete_pedido(pedido_id=%r) rechazado: %s", pedido_id, e)
+            raise
+        except Exception:
+            # Error inesperado (base de datos, bug): traza completa en el log.
+            self.pedidos_repo.rollback()
+            logger.exception("delete_pedido(pedido_id=%r) falló", pedido_id)
             raise
         finally:
             self.pedidos_repo.close()
