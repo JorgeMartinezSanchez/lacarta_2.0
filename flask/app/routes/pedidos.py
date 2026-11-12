@@ -9,6 +9,7 @@ bp = Blueprint("pedidos", __name__, url_prefix="/pedidos")
 
 
 @bp.get("/")
+@requires_auth("read:pedidos")
 def listar_pedidos():
     estado = request.args.get("estado", "").strip()
     consulta = Pedido.query.order_by(Pedido.fecha.desc())
@@ -18,13 +19,14 @@ def listar_pedidos():
 
 
 @bp.get("/<int:pedido_id>")
+@requires_auth("read:pedidos")
 def detalle_pedido(pedido_id):
     pedido = db.get_or_404(Pedido, pedido_id)
     return render_template("pedidos/detalle.html", pedido=pedido)
 
 
 @bp.route("/nuevo", methods=["GET", "POST"])
-@requires_auth("write:pedidos")
+@requires_auth("create:pedidos")
 def crear_pedido(payload):
     if request.method == "POST":
         restaurante_id = request.form.get("restaurante_id", type=int)
