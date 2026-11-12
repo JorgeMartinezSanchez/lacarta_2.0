@@ -17,9 +17,12 @@ class PlatosService:
 
     # --- lectura ---------------------------------------------------------
 
-    def get_all_platos(self) -> list[PlatosDTO_Output]:
+    def get_all_platos(self, restaurante_id: int | None = None) -> list[PlatosDTO_Output]:
         try:
-            platos = self.platos_repo.getAll()
+            if restaurante_id:
+                platos = self.platos_repo.listar_por_restaurante(restaurante_id)
+            else:
+                platos = self.platos_repo.getAll()
             return [self._to_dto(p) for p in platos]
         finally:
             self.platos_repo.close()
@@ -78,8 +81,10 @@ class PlatosService:
     def delete_plato(self, plato_id: int) -> None:
         try:
             plato = self._find(plato_id)
-            # Si el plato está en algún pedido, la FK de item_pedido impide borrarlo:
-            # el IntegrityError sube después del rollback.
+            if self.platos_repo.esta_en_pedidos(plato.id):
+                raise BusinessRuleError(
+                    "No se puede eliminar: el plato está en un pedido. Márcalo como no disponible."
+                )
             self.platos_repo.delete(plato)
             self.platos_repo.commit()
         except BusinessRuleError as e:
@@ -133,4 +138,5 @@ class PlatosService:
             nombre=p.nombre,
             precio=float(p.precio),
             disponible=bool(p.disponible),
+            restaurante_nombre=p.restaurante.nombre,
         )

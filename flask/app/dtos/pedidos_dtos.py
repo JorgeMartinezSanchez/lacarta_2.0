@@ -8,7 +8,7 @@ class PedidosDTO_Output:
   estado: str
   fecha: date
   total: float | None
-
+  restaurante_nombre: str | None = None
 @dataclass(frozen=True)
 class PedidosDTO_Input:
   restaurante_id: int

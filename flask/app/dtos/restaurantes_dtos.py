@@ -7,6 +7,7 @@ class RestauranteDTO_Output:
     ciudad: str
     direccion: str | None = None
     telefono: str | None = None
+    num_platos: int = 0
 
 @dataclass(frozen=True)
 class RestauranteDTO_Input:

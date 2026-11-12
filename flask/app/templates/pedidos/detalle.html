@@ -8,7 +8,7 @@
     <p>
         <strong>Restaurante:</strong>
         <a href="{{ url_for('restaurantes.detalle_restaurante', restaurante_id=pedido.restaurante_id) }}">
-            {{ pedido.restaurante.nombre }}
+            {{ pedido.restaurante_nombre }}
         </a>
     </p>
     <p><strong>Fecha:</strong> {{ pedido.fecha.strftime('%Y-%m-%d') }}</p>
@@ -41,7 +41,6 @@
     <hr>
 
     <h2>Items del pedido</h2>
-    {% set items = pedido.items if pedido.items is defined else [] %}
     {% if items %}
         <table border="1" cellpadding="5" cellspacing="0">
             <thead>
@@ -56,7 +55,7 @@
             <tbody>
                 {% for item in items %}
                 <tr>
-                    <td>{{ item.plato.nombre }}</td>
+                    <td>{{ item.plato_nombre }}</td>
                     <td>{{ item.cantidad }}</td>
                     <td>${{ "%.2f"|format(item.precio_unitario) }}</td>
                     <td>${{ "%.2f"|format(item.precio_unitario * item.cantidad|float) }}</td>
@@ -76,12 +75,12 @@
     {% endif %}
 
     <h3>Agregar item</h3>
-    {% if pedido.restaurante.platos %}
+    {% if platos %}
         <form action="{{ url_for('items_pedido.agregar_item', pedido_id=pedido.id) }}" method="POST">
             <div>
                 <label for="plato_id">Plato:*</label><br>
                 <select id="plato_id" name="plato_id" required>
-                    {% for plato in pedido.restaurante.platos %}
+                    {% for plato in platos %}
                         {% if plato.disponible %}
                             <option value="{{ plato.id }}">
                                 {{ plato.nombre }} — ${{ "%.2f"|format(plato.precio) }}

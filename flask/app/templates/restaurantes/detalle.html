@@ -22,9 +22,9 @@
 
     <h2>Platos del Restaurante</h2>
 
-    {% if restaurante.platos %}
+    {% if platos %}
         <ul>
-            {% for plato in restaurante.platos %}
+            {% for plato in platos %}
                 <li>
                     <strong>{{ plato.nombre }}</strong> - ${{ "%.2f"|format(plato.precio) }}
                     {% if plato.disponible %}

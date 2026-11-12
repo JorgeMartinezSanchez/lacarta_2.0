@@ -40,7 +40,7 @@
                     <td>{{ pedido.fecha.strftime('%Y-%m-%d') }}</td>
                     <td>
                         <a href="{{ url_for('restaurantes.detalle_restaurante', restaurante_id=pedido.restaurante_id) }}">
-                            {{ pedido.restaurante.nombre }}
+                            {{ pedido.restaurante_nombre }}
                         </a>
                     </td>
                     <td>{{ pedido.estado }}</td>

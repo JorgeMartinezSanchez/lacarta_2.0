@@ -13,9 +13,13 @@ class RestaurantesService:
 
     # --- lectura ---------------------------------------------------------
 
-    def get_all_restaurants(self) -> list[RestauranteDTO_Output]:
+    def get_all_restaurants(self, ciudad: str | None = None) -> list[RestauranteDTO_Output]:
         try:
-            restaurantes = self.restaurantes_repo.getAll()
+            ciudad = (ciudad or "").strip()
+            if ciudad:
+                restaurantes = self.restaurantes_repo.listar_por_ciudad(ciudad)
+            else:
+                restaurantes = self.restaurantes_repo.getAll()
             return [self._to_dto(r) for r in restaurantes]
         finally:
             self.restaurantes_repo.close()
@@ -124,4 +128,5 @@ class RestaurantesService:
             ciudad=r.ciudad,
             direccion=r.direccion,
             telefono=r.telefono,
+            num_platos=len(r.platos),
         )

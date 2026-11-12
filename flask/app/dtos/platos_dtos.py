@@ -7,7 +7,7 @@ class PlatosDTO_Output:
     nombre: str
     precio: float
     disponible: bool
-
+    restaurante_nombre: str | None = None 
 @dataclass(frozen=True)
 class PlatosDTO_Input:
     restaurante_id: int

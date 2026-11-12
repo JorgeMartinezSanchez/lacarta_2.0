@@ -33,7 +33,7 @@
                 <tr>
                     <td>{{ r.nombre }}</td>
                     <td>{{ r.ciudad }}</td>
-                    <td>{{ r.platos | length }}</td>
+                    <td>{{ r.num_platos }}</td>
                     <td>
                         <a href="{{ url_for('restaurantes.detalle_restaurante', restaurante_id=r.id) }}">Ver detalle</a>
                     </td>

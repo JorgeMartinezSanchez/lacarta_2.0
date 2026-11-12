@@ -18,9 +18,13 @@ class PedidosService:
 
     # --- lectura ---------------------------------------------------------
 
-    def get_all_pedidos(self) -> list[PedidosDTO_Output]:
+    def get_all_pedidos(self, estado: str | None = None) -> list[PedidosDTO_Output]:
         try:
-            pedidos = self.pedidos_repo.getAll()
+            estado = (estado or "").strip()
+            if estado:
+                pedidos = self.pedidos_repo.listar_por_estado(estado)
+            else:
+                pedidos = self.pedidos_repo.getAll()
             return [self._to_dto(p) for p in pedidos]
         finally:
             self.pedidos_repo.close()
@@ -103,6 +107,27 @@ class PedidosService:
         finally:
             self.pedidos_repo.close()
 
+    def cambiar_estado(self, pedido_id: int, nuevo_estado: str) -> PedidosDTO_Output:
+        """Atajo para cambiar solo el estado (patrón State)."""
+        try:
+            pedido = self._find(pedido_id)
+            nuevo_estado = (nuevo_estado or "").strip()
+            if not nuevo_estado:
+                raise BusinessRuleError("Estado inválido.")
+            cambiar_estado(pedido, nuevo_estado)  # lanza TransicionInvalida si no se puede
+            self.pedidos_repo.commit()
+            return self._to_dto(pedido)
+        except BusinessRuleError as e:
+            self.pedidos_repo.rollback()
+            logger.warning("cambiar_estado(pedido_id=%r, nuevo_estado=%r) rechazado: %s", pedido_id, nuevo_estado, e)
+            raise
+        except Exception:
+            self.pedidos_repo.rollback()
+            logger.exception("cambiar_estado(pedido_id=%r, nuevo_estado=%r) falló", pedido_id, nuevo_estado)
+            raise
+        finally:
+            self.pedidos_repo.close()
+
     def delete_pedido(self, pedido_id: int) -> None:
         """Solo se borran pedidos pendientes o cancelados (los demás son historial)."""
         try:
@@ -147,4 +172,5 @@ class PedidosService:
             estado=p.estado,
             fecha=p.fecha,
             total=float(p.total) if p.total is not None else None,
+            restaurante_nombre=p.restaurante.nombre,
         )

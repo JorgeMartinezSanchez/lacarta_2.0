@@ -19,7 +19,11 @@ class Repository:
     # --- lectura ---------------------------------------------------------
 
     def getAll(self):
-        query = select(self.model).order_by(*self.default_order)
+        return self._listar()
+
+    def _listar(self, *condiciones):
+        """Ayudante para las subclases: getAll con condiciones WHERE opcionales."""
+        query = select(self.model).where(*condiciones).order_by(*self.default_order)
         return self.session.scalars(query).all()
 
     def getOne(self, entity_id):

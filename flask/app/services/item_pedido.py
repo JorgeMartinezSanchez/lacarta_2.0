@@ -25,9 +25,12 @@ class ItemPedidosService:
 
     # --- lectura ---------------------------------------------------------
 
-    def get_all_items(self) -> list[ItemPedidosDTO_Output]:
+    def get_all_items(self, pedido_id: int | None = None) -> list[ItemPedidosDTO_Output]:
         try:
-            items = self.items_repo.getAll()
+            if pedido_id:
+                items = self.items_repo.listar_por_pedido(pedido_id)
+            else:
+                items = self.items_repo.getAll()
             return [self._to_dto(i) for i in items]
         finally:
             self.items_repo.close()
@@ -182,4 +185,5 @@ class ItemPedidosService:
             cantidad=int(i.cantidad),
             precio_unitario=float(i.precio_unitario),
             restaurante_id=i.restaurante_id,
+            plato_nombre=i.plato.nombre,
         )
