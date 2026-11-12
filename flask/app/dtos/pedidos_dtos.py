@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import date
 
 @dataclass(frozen=True)
@@ -6,7 +7,7 @@ class PedidosDTO_Output:
   restaurante_id: int
   estado: str
   fecha: date
-  total: float
+  total: float | None
 
 @dataclass(frozen=True)
 class PedidosDTO_Input:
