@@ -12,3 +12,6 @@ def register_error_handlers(app):
     def error_500(error):
         db.session.rollback()
         return render_template("errores/500.html"), 500
+
+class BusinessRuleError(Exception):
+    """Una regla de negocio impide la operación. El mensaje se muestra al usuario."""
