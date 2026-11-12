@@ -49,6 +49,11 @@ class Repository:
         self.session.delete(entity)
         self.session.flush()
 
+    def refresh(self, entity):
+        """Recarga la entidad y sus relaciones desde la base (dentro de la transacción)."""
+        self.session.refresh(entity)
+        return entity
+
     # --- transacción -----------------------------------------------------
 
     def commit(self):
