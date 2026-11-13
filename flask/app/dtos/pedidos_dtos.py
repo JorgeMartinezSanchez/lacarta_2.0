@@ -7,8 +7,10 @@ class PedidosDTO_Output:
   restaurante_id: int
   estado: str
   fecha: date
-  total: float | None
+  total: float
   restaurante_nombre: str | None = None
+  cliente: str | None = None  # sub de Auth0 del dueño
+
 @dataclass(frozen=True)
 class PedidosDTO_Input:
   restaurante_id: int
