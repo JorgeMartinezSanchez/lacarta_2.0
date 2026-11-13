@@ -1,13 +1,14 @@
 from .base import EstadoPedido
-from .entregado import Entregado
+from .listo import Listo
 
 
 class EnPreparacion(EstadoPedido):
-    nombre = "en preparación"  # igual que en los templates
+    nombre = "en_preparacion"
+    etiqueta = "En preparación"
 
-    def entregar(self, pedido):
-        self._cambiar(pedido, Entregado)
+    def marcar_listo(self, pedido):
+        self._cambiar(pedido, Listo)
 
     def cancelar(self, pedido):
-        # Regla 7: una vez que cocina empezó, el cliente ya no puede cancelar.
+        # Una vez que cocina empezó, el cliente ya no puede cancelar.
         self._denegar("cancelar", "El pedido ya se está preparando y no se puede cancelar.")

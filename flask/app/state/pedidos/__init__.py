@@ -2,14 +2,25 @@ from .base import EstadoPedido, TransicionInvalida
 from .cancelado import Cancelado
 from .en_preparacion import EnPreparacion
 from .entregado import Entregado
+from .listo import Listo
 from .pendiente import Pendiente
 
+#   pendiente ──► en_preparacion ──► listo ──► entregado
+#       └──────────────────────────────────────► cancelado
+
+# En el orden del flujo (para los <select> de los templates)
+ORDEN = (Pendiente, EnPreparacion, Listo, Entregado, Cancelado)
+
 # Valor guardado en la base -> clase de estado
-ESTADOS = {cls.nombre: cls for cls in (Pendiente, EnPreparacion, Entregado, Cancelado)}
+ESTADOS = {cls.nombre: cls for cls in ORDEN}
+
+# Para los templates: [("pendiente", "Pendiente"), ("en_preparacion", "En preparación"), ...]
+OPCIONES = [(cls.nombre, cls.etiqueta) for cls in ORDEN]
 
 # Estado destino (lo que llega del <select>) -> acción que lo produce
 ACCIONES = {
     EnPreparacion.nombre: "preparar",
+    Listo.nombre: "marcar_listo",
     Entregado.nombre: "entregar",
     Cancelado.nombre: "cancelar",
 }
@@ -34,6 +45,7 @@ def cambiar_estado(pedido, nuevo):
 
 
 __all__ = [
-    "ESTADOS", "EstadoPedido", "TransicionInvalida", "estado_de", "cambiar_estado",
-    "Pendiente", "EnPreparacion", "Entregado", "Cancelado",
+    "ACCIONES", "ESTADOS", "OPCIONES", "ORDEN",
+    "EstadoPedido", "TransicionInvalida", "estado_de", "cambiar_estado",
+    "Pendiente", "EnPreparacion", "Listo", "Entregado", "Cancelado",
 ]

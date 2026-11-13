@@ -13,12 +13,16 @@ class EstadoPedido(ABC):
     Cada estado concreto sobrescribe solo las acciones que sí permite.
     """
 
-    nombre = ""  # el valor que se guarda en Pedido.estado
+    nombre = ""    # el valor que se guarda en Pedido.estado (igual que en el CHECK de Django)
+    etiqueta = ""  # cómo se muestra en pantalla
 
     # --- acciones (transiciones) -----------------------------------------
 
     def preparar(self, pedido):
         self._denegar("preparar")
+
+    def marcar_listo(self, pedido):
+        self._denegar("marcar como listo")
 
     def entregar(self, pedido):
         self._denegar("entregar")
@@ -41,4 +45,4 @@ class EstadoPedido(ABC):
         pedido.estado = estado_destino.nombre
 
     def _denegar(self, accion, motivo=None):
-        raise TransicionInvalida(motivo or f"No se puede {accion} un pedido {self.nombre}.")
+        raise TransicionInvalida(motivo or f"No se puede {accion} un pedido {self.etiqueta.lower()}.")

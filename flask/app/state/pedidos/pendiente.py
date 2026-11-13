@@ -5,6 +5,7 @@ from .en_preparacion import EnPreparacion
 
 class Pendiente(EstadoPedido):
     nombre = "pendiente"
+    etiqueta = "Pendiente"
 
     def preparar(self, pedido):
         self._cambiar(pedido, EnPreparacion)
