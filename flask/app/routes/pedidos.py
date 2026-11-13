@@ -6,6 +6,7 @@ from flask import Blueprint, abort, flash, redirect, render_template, request, u
 from ..auth import requires_auth
 from ..dtos.pedidos_dtos import PedidosDTO_Input
 from ..errors import BusinessRuleError, NotFoundError
+from ..state.pedidos import OPCIONES as ESTADOS_PEDIDO
 from .dependencias import items_service, pedidos_service, platos_service, restaurantes_service
 
 bp = Blueprint("pedidos", __name__, url_prefix="/pedidos")
@@ -15,7 +16,8 @@ bp = Blueprint("pedidos", __name__, url_prefix="/pedidos")
 @requires_auth("read:pedidos")
 def listar_pedidos(payload):
     pedidos = pedidos_service().get_all_pedidos(estado=request.args.get("estado"))
-    return render_template("pedidos/index.html", pedidos=pedidos)
+    return render_template("pedidos/index.html", pedidos=pedidos,
+                           estados=ESTADOS_PEDIDO, etiquetas=dict(ESTADOS_PEDIDO))
 
 
 @bp.get("/<int:pedido_id>")
@@ -27,7 +29,8 @@ def detalle_pedido(payload, pedido_id):
         abort(404)
     items = items_service().get_all_items(pedido_id=pedido_id)
     platos = platos_service().get_all_platos(restaurante_id=pedido.restaurante_id)
-    return render_template("pedidos/detalle.html", pedido=pedido, items=items, platos=platos)
+    return render_template("pedidos/detalle.html", pedido=pedido, items=items, platos=platos,
+                           estados=ESTADOS_PEDIDO, etiquetas=dict(ESTADOS_PEDIDO))
 
 
 @bp.route("/nuevo", methods=["GET", "POST"])
@@ -40,7 +43,7 @@ def crear_pedido(payload):
                 estado="pendiente",   # el servicio lo fija igual: todo pedido nace pendiente
                 fecha=date.today(),   # idem: la fecha la decide el servidor
                 total=0,
-            ))
+            ), cliente=payload["sub"])   # R1.2: el cliente sale del token, no del formulario
         except BusinessRuleError as e:
             flash(str(e), "error")
             return render_template("pedidos/formulario.html",
