@@ -50,9 +50,10 @@ class Pedido(db.Model):
       db.ForeignKey("content.restaurantes.id"),
       nullable=False,
   )
-  estado = db.Column(db.String(120), nullable=False, default="pendiente")
+  cliente = db.Column(db.String(255), nullable=False, index=True)  # sub del token de Auth0
+  estado = db.Column(db.String(20), nullable=False, default="pendiente")
   fecha = db.Column(db.Date, nullable=False)
-  total = db.Column(db.Numeric(10, 2))
+  total = db.Column(db.Numeric(10, 2), nullable=False, default=0)
   items = db.relationship("ItemPedido", backref="pedido",
                         cascade="all, delete-orphan")
 
@@ -68,7 +69,7 @@ class ItemPedido(db.Model):
   plato_id = db.Column(
       db.Integer, db.ForeignKey("content.platos.id"), nullable=False
   )
-  cantidad = db.Column(db.String(120), nullable=False)
+  cantidad = db.Column(db.SmallInteger, nullable=False)
   precio_unitario = db.Column(db.Numeric(10, 2), nullable=False)
   restaurante_id = db.Column(
       db.Integer,
