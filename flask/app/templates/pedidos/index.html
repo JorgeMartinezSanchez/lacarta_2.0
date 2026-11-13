@@ -7,9 +7,14 @@
 
     <form method="GET" action="{{ url_for('pedidos.listar_pedidos') }}">
         <label for="estado">Filtrar por estado:</label>
-        <input type="text" id="estado" name="estado"
-               value="{{ request.args.get('estado', '') }}"
-               placeholder="pendiente, en preparación, entregado...">
+        <select id="estado" name="estado">
+            <option value="">Todos</option>
+            {% for valor, etiqueta in estados %}
+                <option value="{{ valor }}" {% if request.args.get('estado') == valor %}selected{% endif %}>
+                    {{ etiqueta }}
+                </option>
+            {% endfor %}
+        </select>
         <button type="submit">Filtrar</button>
         {% if request.args.get('estado') %}
             <a href="{{ url_for('pedidos.listar_pedidos') }}">Limpiar filtro</a>
@@ -43,7 +48,7 @@
                             {{ pedido.restaurante_nombre }}
                         </a>
                     </td>
-                    <td>{{ pedido.estado }}</td>
+                    <td>{{ etiquetas.get(pedido.estado, pedido.estado) }}</td>
                     <td>
                         {% if pedido.total is not none %}
                             ${{ "%.2f"|format(pedido.total) }}

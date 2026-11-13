@@ -13,7 +13,7 @@
     </p>
     <p><strong>Fecha:</strong> {{ pedido.fecha.strftime('%Y-%m-%d') }}</p>
     <p>
-        <strong>Estado actual:</strong> {{ pedido.estado }}
+        <strong>Estado actual:</strong> {{ etiquetas.get(pedido.estado, pedido.estado) }}
     </p>
     <p>
         <strong>Total:</strong>
@@ -29,9 +29,9 @@
     <h2>Cambiar estado</h2>
     <form action="{{ url_for('pedidos.actualizar_estado', pedido_id=pedido.id) }}" method="POST">
         <select name="estado" required>
-            {% for opcion in ['pendiente', 'en preparación', 'entregado', 'cancelado'] %}
-                <option value="{{ opcion }}" {% if pedido.estado == opcion %}selected{% endif %}>
-                    {{ opcion }}
+            {% for valor, etiqueta in estados %}
+                <option value="{{ valor }}" {% if pedido.estado == valor %}selected{% endif %}>
+                    {{ etiqueta }}
                 </option>
             {% endfor %}
         </select>
