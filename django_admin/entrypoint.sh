@@ -5,14 +5,14 @@ echo "==> Esperando a PostgreSQL en ${POSTGRES_HOST:-db}:5432..."
 python initialize_con.py
 
 echo "==> Aplicando migraciones..."
-if ls django_admin/migrations/0*.py >/dev/null 2>&1; then
-    echo " Eliminando migraciones anteriores ..."
-    rm -f django_admin/migrations/0*.py
-    touch django_admin/migrations/__init__.py
-fi
+#if ls django_admin/migrations/0*.py >/dev/null 2>&1; then
+#    echo " Eliminando migraciones anteriores ..."
+#    rm -f django_admin/migrations/0*.py
+#    touch django_admin/migrations/__init__.py
+#fi
 
-echo " Creando nueva migración ..."
-python manage.py makemigrations django_admin --noinput
+#echo " Creando nueva migración ..."
+#python manage.py makemigrations django_admin --noinput
 
 echo " Aplicando migraciones ..."
 python manage.py migrate --noinput
