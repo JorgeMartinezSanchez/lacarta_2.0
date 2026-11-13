@@ -17,7 +17,20 @@ ESTADOS = {cls.nombre: cls for cls in ORDEN}
 # Para los templates: [("pendiente", "Pendiente"), ("en_preparacion", "En preparación"), ...]
 OPCIONES = [(cls.nombre, cls.etiqueta) for cls in ORDEN]
 
-# Estado destino (lo que llega del <select>) -> acción que lo produce
+# La cola de la cocina: pedidos que todavía no terminaron
+ACTIVOS = (Pendiente.nombre, EnPreparacion.nombre, Listo.nombre)
+
+# Siguiente estado de cada pedido activo (el botón "Pasar a ..." de la cocina)
+SIGUIENTE = {
+    Pendiente.nombre: EnPreparacion,
+    EnPreparacion.nombre: Listo,
+    Listo.nombre: Entregado,
+}
+
+# Estados a los que la cocina puede llevar un pedido (cancelar es solo del cliente dueño)
+DESTINOS_COCINA = (EnPreparacion.nombre, Listo.nombre, Entregado.nombre)
+
+# Estado destino (lo que llega del formulario) -> acción que lo produce
 ACCIONES = {
     EnPreparacion.nombre: "preparar",
     Listo.nombre: "marcar_listo",
@@ -45,7 +58,7 @@ def cambiar_estado(pedido, nuevo):
 
 
 __all__ = [
-    "ACCIONES", "ESTADOS", "OPCIONES", "ORDEN",
+    "ACCIONES", "ACTIVOS", "DESTINOS_COCINA", "ESTADOS", "OPCIONES", "ORDEN", "SIGUIENTE",
     "EstadoPedido", "TransicionInvalida", "estado_de", "cambiar_estado",
     "Pendiente", "EnPreparacion", "Listo", "Entregado", "Cancelado",
 ]
