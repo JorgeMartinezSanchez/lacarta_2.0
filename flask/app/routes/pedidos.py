@@ -1,86 +1,44 @@
-"""Controlador de pedidos (capa de presentación)."""
-from datetime import date
+"""Controlador de pedidos del CLIENTE (capa de presentación).
 
-from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+Todas las rutas usan read:mis-pedidos y filtran por el 'sub' del token:
+un cliente nunca ve ni toca pedidos ajenos. Crear un pedido está en
+restaurantes.pedir (/restaurantes/<id>/pedir).
+"""
+from flask import Blueprint, abort, flash, redirect, render_template, url_for
 
 from ..auth import requires_auth
-from ..dtos.pedidos_dtos import PedidosDTO_Input
 from ..errors import BusinessRuleError, NotFoundError
 from ..state.pedidos import OPCIONES as ESTADOS_PEDIDO
-from .dependencias import items_service, pedidos_service, platos_service, restaurantes_service
+from .dependencias import pedidos_service
 
 bp = Blueprint("pedidos", __name__, url_prefix="/pedidos")
 
 
 @bp.get("/")
-@requires_auth("read:pedidos")
+@requires_auth("read:mis-pedidos")
 def listar_pedidos(payload):
-    pedidos = pedidos_service().get_all_pedidos(estado=request.args.get("estado"))
-    return render_template("pedidos/index.html", pedidos=pedidos,
-                           estados=ESTADOS_PEDIDO, etiquetas=dict(ESTADOS_PEDIDO))
+    pedidos = pedidos_service().get_mis_pedidos(cliente=payload["sub"])
+    return render_template("pedidos/index.html", pedidos=pedidos, etiquetas=dict(ESTADOS_PEDIDO))
 
 
 @bp.get("/<int:pedido_id>")
-@requires_auth("read:pedidos")
+@requires_auth("read:mis-pedidos")
 def detalle_pedido(payload, pedido_id):
     try:
-        pedido = pedidos_service().get_pedido(pedido_id)
+        pedido = pedidos_service().get_mi_pedido(pedido_id, cliente=payload["sub"])
     except NotFoundError:
-        abort(404)
-    items = items_service().get_all_items(pedido_id=pedido_id)
-    platos = platos_service().get_all_platos(restaurante_id=pedido.restaurante_id)
-    return render_template("pedidos/detalle.html", pedido=pedido, items=items, platos=platos,
-                           estados=ESTADOS_PEDIDO, etiquetas=dict(ESTADOS_PEDIDO))
+        abort(404)  # R2.6: 404 y no 403, para no confirmar que el pedido existe
+    return render_template("pedidos/detalle.html", pedido=pedido, etiquetas=dict(ESTADOS_PEDIDO))
 
 
-@bp.route("/nuevo", methods=["GET", "POST"])
-@requires_auth("create:pedidos")
-def crear_pedido(payload):
-    if request.method == "POST":
-        try:
-            pedido = pedidos_service().create_pedido(PedidosDTO_Input(
-                restaurante_id=request.form.get("restaurante_id", type=int),
-                estado="pendiente",   # el servicio lo fija igual: todo pedido nace pendiente
-                fecha=date.today(),   # idem: la fecha la decide el servidor
-                total=0,
-            ), cliente=payload["sub"])   # R1.2: el cliente sale del token, no del formulario
-        except BusinessRuleError as e:
-            flash(str(e), "error")
-            return render_template("pedidos/formulario.html",
-                                   pedido=None,
-                                   restaurantes=restaurantes_service().get_all_restaurants()), 400
-        flash("Pedido creado.", "success")
-        return redirect(url_for("pedidos.detalle_pedido", pedido_id=pedido.id))
-
-    # GET: permitir preseleccionar restaurante vía ?restaurante_id=
-    return render_template("pedidos/formulario.html",
-                           pedido=None,
-                           restaurante_preseleccionado=request.args.get("restaurante_id", type=int),
-                           restaurantes=restaurantes_service().get_all_restaurants())
-
-
-@bp.post("/<int:pedido_id>/estado")
-@requires_auth("write:pedidos")
-def actualizar_estado(payload, pedido_id):
+@bp.post("/<int:pedido_id>/cancelar")
+@requires_auth("read:mis-pedidos")
+def cancelar_pedido(payload, pedido_id):
     try:
-        pedidos_service().cambiar_estado(pedido_id, request.form.get("estado", ""))
-        flash("Estado actualizado.", "success")
+        pedidos_service().cancelar(pedido_id, cliente=payload["sub"])
+        flash("Pedido cancelado.", "success")
     except NotFoundError:
         abort(404)
-    except BusinessRuleError as e:   # incluye TransicionInvalida del patrón State
+    except BusinessRuleError as e:   # p. ej. ya está en preparación
         flash(str(e), "error")
-    return redirect(url_for("pedidos.detalle_pedido", pedido_id=pedido_id))
-
-
-@bp.post("/<int:pedido_id>/eliminar")
-@requires_auth("delete:pedidos")
-def eliminar_pedido(payload, pedido_id):
-    try:
-        pedidos_service().delete_pedido(pedido_id)
-    except NotFoundError:
-        abort(404)
-    except BusinessRuleError as e:
-        flash(str(e), "error")
-        return redirect(url_for("pedidos.detalle_pedido", pedido_id=pedido_id))
-    flash("Pedido eliminado.", "success")
-    return redirect(url_for("pedidos.listar_pedidos"))
+    return redirect(url_for("pedidos.detalle_pedido", pedido_id=pedido_id))  # Post/Redirect/Get

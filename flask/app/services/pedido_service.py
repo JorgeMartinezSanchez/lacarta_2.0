@@ -1,181 +1,218 @@
 import logging
 from datetime import date
+from decimal import Decimal
 
-from ..dtos.pedidos_dtos import PedidosDTO_Input, PedidosDTO_Output
+from ..dtos.item_pedido_dtos import ItemPedidosDTO_Output
+from ..dtos.pedidos_dtos import NuevoPedidoDTO, PedidosDTO_Output
 from ..errors import BusinessRuleError, NotFoundError
-from ..models import Pedido
+from ..models import ItemPedido, Pedido
 from ..repositories.pedido_repository import PedidoRepository
+from ..repositories.plato_repository import PlatoRepository
 from ..repositories.restaurantes_repository import RestauranteRepository
-from ..state.pedidos import Cancelado, Pendiente, cambiar_estado, estado_de
+from ..state.pedidos import ACTIVOS, DESTINOS_COCINA, Pendiente, cambiar_estado, estado_de
 
 logger = logging.getLogger(__name__)
 
+CANTIDAD_MIN, CANTIDAD_MAX = 1, 20  # R1.5 (la base lo refuerza con un CHECK)
+
 
 class PedidosService:
-    def __init__(self, pedidos_repo: PedidoRepository, restaurantes_repo: RestauranteRepository):
+    def __init__(
+        self,
+        pedidos_repo: PedidoRepository,
+        restaurantes_repo: RestauranteRepository,
+        platos_repo: PlatoRepository,
+    ):
         self.pedidos_repo = pedidos_repo
-        self.restaurantes_repo = restaurantes_repo  # para validar que el restaurante exista
+        self.restaurantes_repo = restaurantes_repo
+        self.platos_repo = platos_repo
 
-    # --- lectura ---------------------------------------------------------
+    # =====================================================================
+    # Cliente
+    # =====================================================================
 
-    def get_all_pedidos(self, estado: str | None = None) -> list[PedidosDTO_Output]:
-        try:
-            estado = (estado or "").strip()
-            if estado:
-                pedidos = self.pedidos_repo.listar_por_estado(estado)
-            else:
-                pedidos = self.pedidos_repo.getAll()
-            return [self._to_dto(p) for p in pedidos]
-        finally:
-            self.pedidos_repo.close()
+    def create_pedido(self, nuevo: NuevoPedidoDTO, cliente: str) -> PedidosDTO_Output:
+        """R1: crea el pedido con TODOS sus ítems en una sola transacción.
 
-    def get_pedido(self, pedido_id: int) -> PedidosDTO_Output:
-        try:
-            return self._to_dto(self._find(pedido_id))
-        finally:
-            self.pedidos_repo.close()
-
-    # --- escritura -------------------------------------------------------
-
-    def create_pedido(self, newPedido: PedidosDTO_Input, cliente: str) -> PedidosDTO_Output:
-        """Crea un pedido vacío.
-
-        estado, fecha y total NO se toman del DTO: los decide el servidor.
-        cliente es el 'sub' del token de Auth0 (lo pasa la ruta), nunca un dato del formulario.
-        Todo pedido nace 'pendiente', con la fecha de hoy y sin total
-        (el total lo calcula ItemPedidosService al agregar ítems).
+        - cliente: el 'sub' del token (lo pasa la ruta), nunca un dato del formulario.
+        - precio_unitario se copia del plato (precio congelado) y el total lo calcula
+          el servidor: del formulario solo se usan plato_id y cantidad.
+        - Si UN ítem es inválido se rechaza el pedido completo: se valida todo antes de
+          escribir y hay un único commit; ante cualquier error, rollback.
         """
         try:
-            self._validar_restaurante(newPedido.restaurante_id)
             if not cliente:
                 raise BusinessRuleError("No se pudo identificar al cliente.")
+            
+            if self.restaurantes_repo.getOne(nuevo.restaurante_id) is None:
+                raise NotFoundError(f"No existe el restaurante {nuevo.restaurante_id}.")
+            
+            if not nuevo.items:
+                raise BusinessRuleError("Elige al menos un plato.")
 
+            # 1. Validar todos los ítems (todavía no se escribe nada)
+            items, total, vistos = [], Decimal("0"), set()
+            for item in nuevo.items:
+                if item.plato_id in vistos:
+                    raise BusinessRuleError("Un plato aparece repetido en el pedido.")
+                vistos.add(item.plato_id)
+
+                plato = self.platos_repo.getOne(item.plato_id)
+                if plato is None:
+                    raise BusinessRuleError(f"El plato {item.plato_id} no existe.")
+                if plato.restaurante_id != nuevo.restaurante_id:
+                    raise BusinessRuleError(f"El plato '{plato.nombre}' es de otro restaurante.")
+                if not plato.disponible:
+                    raise BusinessRuleError(f"El plato '{plato.nombre}' no está disponible.")
+                cantidad = self._validar_cantidad(item.cantidad, plato.nombre)
+
+                items.append(ItemPedido(
+                    plato_id=plato.id,
+                    cantidad=cantidad,
+                    precio_unitario=plato.precio,       # R1.3 precio congelado
+                    restaurante_id=plato.restaurante_id,
+                ))
+                total += plato.precio * cantidad         # R1.4 total del servidor
+
+            # 2. Escribir pedido + ítems (cascade) y confirmar una sola vez
             pedido = self.pedidos_repo.create(Pedido(
                 cliente=cliente,
-                restaurante_id=newPedido.restaurante_id,
+                restaurante_id=nuevo.restaurante_id,
                 estado=Pendiente.nombre,
                 fecha=date.today(),
-                total=0,
+                total=total,
+                items=items,
             ))
             self.pedidos_repo.commit()
 
-            return self._to_dto(pedido)
+            return self._to_dto(pedido, con_items=True)
         except BusinessRuleError as e:
-            # Error esperado (validación / regla de negocio): lo ve el usuario.
             self.pedidos_repo.rollback()
-            logger.warning("create_pedido(newPedido=%r, cliente=%r) rechazado: %s", newPedido, cliente, e)
+            logger.warning("create_pedido(nuevo=%r, cliente=%r) rechazado: %s", nuevo, cliente, e)
             raise
         except Exception:
-            # Error inesperado (base de datos, bug): traza completa en el log.
             self.pedidos_repo.rollback()
-            logger.exception("create_pedido(newPedido=%r, cliente=%r) falló", newPedido, cliente)
+            logger.exception("create_pedido(nuevo=%r, cliente=%r) falló", nuevo, cliente)
             raise
         finally:
             self.pedidos_repo.close()
 
-    def update_pedido(self, pedido_id: int, pedidoData: PedidosDTO_Input) -> PedidosDTO_Output:
-        """Cambia el restaurante y/o el estado.
+    def get_mis_pedidos(self, cliente: str) -> list[PedidosDTO_Output]:
+        try:
+            return [self._to_dto(p) for p in self.pedidos_repo.listar_por_cliente(cliente)]
+        finally:
+            self.pedidos_repo.close()
 
-        - El estado pasa por el patrón State: solo se permiten transiciones válidas.
-        - El restaurante solo se puede cambiar si el pedido es modificable y no tiene ítems.
-        - fecha y total del DTO se ignoran.
+    def get_mi_pedido(self, pedido_id: int, cliente: str) -> PedidosDTO_Output:
+        """R2.6: el pedido de otro cliente se trata igual que uno inexistente (404)."""
+        try:
+            return self._to_dto(self._find_de_cliente(pedido_id, cliente), con_items=True)
+        finally:
+            self.pedidos_repo.close()
+
+    def cancelar(self, pedido_id: int, cliente: str) -> PedidosDTO_Output:
+        """pendiente -> cancelado, solo el cliente dueño (tabla de estados)."""
+        try:
+            pedido = self._find_de_cliente(pedido_id, cliente)
+            estado_de(pedido).cancelar(pedido)   # el patrón State rechaza si no está pendiente
+            self.pedidos_repo.commit()
+            return self._to_dto(pedido)
+        except BusinessRuleError as e:
+            self.pedidos_repo.rollback()
+            logger.warning("cancelar(pedido_id=%r, cliente=%r) rechazado: %s", pedido_id, cliente, e)
+            raise
+        except Exception:
+            self.pedidos_repo.rollback()
+            logger.exception("cancelar(pedido_id=%r, cliente=%r) falló", pedido_id, cliente)
+            raise
+        finally:
+            self.pedidos_repo.close()
+
+    # =====================================================================
+    # Cocina
+    # =====================================================================
+
+    def get_cola_cocina(self) -> list[PedidosDTO_Output]:
+        """Pedidos activos (pendiente, en preparación, listo), los más antiguos primero."""
+        try:
+            return [self._to_dto(p, con_items=True) for p in self.pedidos_repo.listar_activos(ACTIVOS)]
+        finally:
+            self.pedidos_repo.close()
+
+    def avanzar(self, pedido_id: int, nuevo_estado: str) -> PedidosDTO_Output:
+        """pendiente -> en_preparacion -> listo -> entregado (rol cocina).
+
+        La cocina no puede cancelar ni retroceder: solo acepta destinos de cocina,
+        y el patrón State rechaza los saltos (p. ej. listo -> pendiente).
         """
         try:
-            pedido = self._find(pedido_id)
-
-            if pedidoData.restaurante_id != pedido.restaurante_id:
-                if not estado_de(pedido).puede_modificarse():
-                    raise BusinessRuleError(f"Un pedido {estado_de(pedido).etiqueta.lower()} ya no se puede modificar.")
-                if pedido.items:
-                    raise BusinessRuleError("No se puede cambiar el restaurante de un pedido con ítems.")
-                self._validar_restaurante(pedidoData.restaurante_id)
-                pedido = self.pedidos_repo.update(pedido, restaurante_id=pedidoData.restaurante_id)
-
-            nuevo_estado = (pedidoData.estado or "").strip()
-            if nuevo_estado:
-                cambiar_estado(pedido, nuevo_estado)  # lanza TransicionInvalida si no se puede
-
-            self.pedidos_repo.commit()
-
-            return self._to_dto(pedido)
-        except BusinessRuleError as e:
-            # Error esperado (validación / regla de negocio): lo ve el usuario.
-            self.pedidos_repo.rollback()
-            logger.warning("update_pedido(pedido_id=%r, pedidoData=%r) rechazado: %s", pedido_id, pedidoData, e)
-            raise
-        except Exception:
-            # Error inesperado (base de datos, bug): traza completa en el log.
-            self.pedidos_repo.rollback()
-            logger.exception("update_pedido(pedido_id=%r, pedidoData=%r) falló", pedido_id, pedidoData)
-            raise
-        finally:
-            self.pedidos_repo.close()
-
-    def cambiar_estado(self, pedido_id: int, nuevo_estado: str) -> PedidosDTO_Output:
-        """Atajo para cambiar solo el estado (patrón State)."""
-        try:
-            pedido = self._find(pedido_id)
             nuevo_estado = (nuevo_estado or "").strip()
-            if not nuevo_estado:
-                raise BusinessRuleError("Estado inválido.")
+            if nuevo_estado not in DESTINOS_COCINA:
+                raise BusinessRuleError(f"La cocina no puede pasar un pedido a '{nuevo_estado}'.")
+
+            pedido = self.pedidos_repo.get_para_actualizar(pedido_id)  # SELECT ... FOR UPDATE
+            if pedido is None:
+                raise NotFoundError(f"No existe el pedido {pedido_id}.")
+
             cambiar_estado(pedido, nuevo_estado)  # lanza TransicionInvalida si no se puede
             self.pedidos_repo.commit()
             return self._to_dto(pedido)
         except BusinessRuleError as e:
             self.pedidos_repo.rollback()
-            logger.warning("cambiar_estado(pedido_id=%r, nuevo_estado=%r) rechazado: %s", pedido_id, nuevo_estado, e)
+            logger.warning("avanzar(pedido_id=%r, nuevo_estado=%r) rechazado: %s", pedido_id, nuevo_estado, e)
             raise
         except Exception:
             self.pedidos_repo.rollback()
-            logger.exception("cambiar_estado(pedido_id=%r, nuevo_estado=%r) falló", pedido_id, nuevo_estado)
+            logger.exception("avanzar(pedido_id=%r, nuevo_estado=%r) falló", pedido_id, nuevo_estado)
             raise
         finally:
             self.pedidos_repo.close()
 
-    def delete_pedido(self, pedido_id: int) -> None:
-        """Solo se borran pedidos pendientes o cancelados (los demás son historial)."""
-        try:
-            pedido = self._find(pedido_id)
+    # =====================================================================
+    # Ayudantes privados
+    # =====================================================================
 
-            if pedido.estado not in (Pendiente.nombre, Cancelado.nombre):
-                raise BusinessRuleError(f"No se puede eliminar un pedido {estado_de(pedido).etiqueta.lower()}.")
-
-            # cascade="all, delete-orphan" del modelo borra también sus ítems
-            self.pedidos_repo.delete(pedido)
-            self.pedidos_repo.commit()
-        except BusinessRuleError as e:
-            # Error esperado (validación / regla de negocio): lo ve el usuario.
-            self.pedidos_repo.rollback()
-            logger.warning("delete_pedido(pedido_id=%r) rechazado: %s", pedido_id, e)
-            raise
-        except Exception:
-            # Error inesperado (base de datos, bug): traza completa en el log.
-            self.pedidos_repo.rollback()
-            logger.exception("delete_pedido(pedido_id=%r) falló", pedido_id)
-            raise
-        finally:
-            self.pedidos_repo.close()
-
-    # --- ayudantes privados ----------------------------------------------
-
-    def _find(self, pedido_id: int) -> Pedido:
-        pedido = self.pedidos_repo.getOne(pedido_id)
-        if pedido is None:
+    def _find_de_cliente(self, pedido_id: int, cliente: str) -> Pedido:
+        pedido = self.pedidos_repo.get_de_cliente(pedido_id, cliente)
+        if pedido is None:  # no existe O es de otro cliente: misma respuesta
             raise NotFoundError(f"No existe el pedido {pedido_id}.")
         return pedido
 
-    def _validar_restaurante(self, restaurante_id: int) -> None:
-        if not restaurante_id or self.restaurantes_repo.getOne(restaurante_id) is None:
-            raise BusinessRuleError("Debes elegir un restaurante válido.")
+    @staticmethod
+    def _validar_cantidad(cantidad, nombre_plato: str) -> int:
+        try:
+            cantidad = int(cantidad)
+        except (TypeError, ValueError):
+            raise BusinessRuleError(f"La cantidad de '{nombre_plato}' debe ser un número entero.") from None
+        if not CANTIDAD_MIN <= cantidad <= CANTIDAD_MAX:
+            raise BusinessRuleError(
+                f"La cantidad de '{nombre_plato}' debe estar entre {CANTIDAD_MIN} y {CANTIDAD_MAX}."
+            )
+        return cantidad
 
     @staticmethod
-    def _to_dto(p: Pedido) -> PedidosDTO_Output:
+    def _to_dto(p: Pedido, con_items: bool = False) -> PedidosDTO_Output:
+        items = ()
+        if con_items:
+            items = tuple(
+                ItemPedidosDTO_Output(
+                    id=i.id,
+                    pedido_id=i.pedido_id,
+                    plato_id=i.plato_id,
+                    cantidad=i.cantidad,
+                    precio_unitario=float(i.precio_unitario),
+                    restaurante_id=i.restaurante_id,
+                    plato_nombre=i.plato.nombre,
+                )
+                for i in p.items
+            )
         return PedidosDTO_Output(
             id=p.id,
             restaurante_id=p.restaurante_id,
             estado=p.estado,
             fecha=p.fecha,
             total=float(p.total),
-            cliente=p.cliente,
             restaurante_nombre=p.restaurante.nombre,
+            cliente=p.cliente,
+            items=items,
         )
