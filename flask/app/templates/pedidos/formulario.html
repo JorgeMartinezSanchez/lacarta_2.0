@@ -1,28 +1,39 @@
 {% extends "layout.html" %}
 
-{% block titulo %}{% if pedido %}Editar Pedido{% else %}Nuevo Pedido{% endif %}{% endblock %}
+{% block titulo %}Pedir en {{ restaurante.nombre }}{% endblock %}
 
 {% block contenido %}
-    <h1>{% if pedido %}Editar Pedido #{{ pedido.id }}{% else %}Crear Nuevo Pedido{% endif %}</h1>
+    <h1>Hacer un pedido en {{ restaurante.nombre }}</h1>
+    <p>Indica cuántas unidades quieres de cada plato (de 1 a 20). Deja en 0 los que no pidas.</p>
 
-    <form action="{% if pedido %}{{ url_for('pedidos.crear_pedido') }}{% else %}{{ url_for('pedidos.crear_pedido') }}{% endif %}"
-          method="POST">
-        <div>
-            <label for="restaurante_id">Restaurante:*</label><br>
-            <select id="restaurante_id" name="restaurante_id" required>
-                <option value="">— Selecciona un restaurante —</option>
-                {% for r in restaurantes %}
-                    <option value="{{ r.id }}"
-                        {% if pedido and pedido.restaurante_id == r.id %}selected{% endif %}>
-                        {{ r.nombre }} ({{ r.ciudad }})
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-        <br>
+    {% set disponibles = platos | selectattr("disponible") | list %}
+    {% if disponibles %}
+        {# Solo se envían plato y cantidad: el precio y el total los calcula el servidor (R1.4). #}
+        <form action="{{ url_for('restaurantes.pedir', restaurante_id=restaurante.id) }}" method="POST">
+            <table border="1" cellpadding="5" cellspacing="0">
+                <thead>
+                    <tr><th>Plato</th><th>Precio</th><th>Cantidad</th></tr>
+                </thead>
+                <tbody>
+                    {% for plato in disponibles %}
+                    <tr>
+                        <td><label for="cantidad_{{ plato.id }}">{{ plato.nombre }}</label></td>
+                        <td>${{ "%.2f"|format(plato.precio) }}</td>
+                        <td>
+                            <input type="number" id="cantidad_{{ plato.id }}" name="cantidad_{{ plato.id }}"
+                                   min="0" max="20" step="1"
+                                   value="{{ cantidades.get('cantidad_' ~ plato.id, 0) }}">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <br>
+            <button type="submit">Hacer pedido</button>
+        </form>
+    {% else %}
+        <p>Este restaurante no tiene platos disponibles en este momento.</p>
+    {% endif %}
 
-        <button type="submit">{% if pedido %}Guardar Cambios{% else %}Crear Pedido{% endif %}</button>
-    </form>
-
-    <p><br><a href="{{ url_for('pedidos.listar_pedidos') }}">Cancelar / Volver</a></p>
+    <p><br><a href="{{ url_for('restaurantes.detalle_restaurante', restaurante_id=restaurante.id) }}">Volver al restaurante</a></p>
 {% endblock %}

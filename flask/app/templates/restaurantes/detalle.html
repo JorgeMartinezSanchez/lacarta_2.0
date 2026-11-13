@@ -3,20 +3,32 @@
 {% block titulo %}Detalle de {{ restaurante.nombre }}{% endblock %}
 
 {% block contenido %}
+    {% set permisos = current_user.permissions if current_user else [] %}
     <h1>{{ restaurante.nombre }}</h1>
     <p><strong>Ciudad:</strong> {{ restaurante.ciudad }}</p>
     <p><strong>Dirección:</strong> {{ restaurante.direccion or 'No especificada' }}</p>
     <p><strong>Teléfono:</strong> {{ restaurante.telefono or 'No especificado' }}</p>
 
     <p>
-        <a href="{{ url_for('restaurantes.editar_restaurante', restaurante_id=restaurante.id) }}">Editar Restaurante</a>
-
-        <form action="{{ url_for('restaurantes.eliminar_restaurante', restaurante_id=restaurante.id) }}"
-              method="POST" style="display:inline;"
-              onsubmit="return confirm('¿Estás seguro de eliminar este restaurante y todos sus platos?');">
-            <button type="submit" style="color: red;">Eliminar Restaurante</button>
-        </form>
+        {% if 'write:carta' in permisos %}
+            <a href="{{ url_for('restaurantes.editar_restaurante', restaurante_id=restaurante.id) }}">Editar Restaurante</a>
+        {% endif %}
+        {% if 'delete:carta' in permisos %}
+            <form action="{{ url_for('restaurantes.eliminar_restaurante', restaurante_id=restaurante.id) }}"
+                  method="POST" style="display:inline;"
+                  onsubmit="return confirm('¿Estás seguro de eliminar este restaurante y todos sus platos?');">
+                <button type="submit" style="color: red;">Eliminar Restaurante</button>
+            </form>
+        {% endif %}
     </p>
+
+    {% if 'create:pedidos' in permisos %}
+        <p><a href="{{ url_for('restaurantes.pedir', restaurante_id=restaurante.id) }}">
+            <button type="button">Hacer pedido</button>
+        </a></p>
+    {% elif not current_user %}
+        <p><a href="{{ url_for('auth.login', next=request.path) }}">Inicia sesión para hacer un pedido</a></p>
+    {% endif %}
 
     <hr>
 
@@ -33,14 +45,6 @@
                         <span style="color: gray;">(No disponible)</span>
                     {% endif %}
 
-                    {% if plato.disponible %}
-                        {# Requisito: botón Order -> crea pedido para este restaurante #}
-                        <a href="{{ url_for('pedidos.crear_pedido', restaurante_id=restaurante.id) }}">
-                            <button type="button">Order</button>
-                        </a>
-                    {% else %}
-                        <button type="button" disabled title="Plato no disponible">Order</button>
-                    {% endif %}
                 </li>
             {% endfor %}
         </ul>
@@ -48,6 +52,7 @@
         <p>Este restaurante aún no tiene platos registrados.</p>
     {% endif %}
 
+    {% if 'write:carta' in permisos %}
     <h3>Agregar un nuevo plato</h3>
     <form action="{{ url_for('platos.agregar_plato', restaurante_id=restaurante.id) }}" method="POST">
         <div>
@@ -68,6 +73,7 @@
         <br>
         <button type="submit">Agregar Plato</button>
     </form>
+    {% endif %}
 
     <p><br><a href="{{ url_for('restaurantes.listar_restaurantes') }}">Volver al listado</a></p>
 {% endblock %}

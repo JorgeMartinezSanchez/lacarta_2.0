@@ -10,6 +10,16 @@
         <nav>
             <a href="{{ url_for('restaurantes.listar_restaurantes') }}">Restaurantes</a>
 
+            {# Los enlaces se muestran según los permisos del token (solo UX: cada ruta
+               tiene su propio @requires_auth, que es la protección real). #}
+            {% set permisos = current_user.permissions if current_user else [] %}
+            {% if 'read:mis-pedidos' in permisos %}
+                <a href="{{ url_for('pedidos.listar_pedidos') }}" style="margin-left: 1rem;">Mis pedidos</a>
+            {% endif %}
+            {% if 'read:pedidos' in permisos %}
+                <a href="{{ url_for('cocina.cola') }}" style="margin-left: 1rem;">Cocina</a>
+            {% endif %}
+
             {% if current_user %}
                 <span style="margin-left: 1rem;">
                     Hola, {{ current_user.name }}

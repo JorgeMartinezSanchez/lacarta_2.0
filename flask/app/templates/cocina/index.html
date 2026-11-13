@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block titulo %}Cocina{% endblock %}
+
+{% block contenido %}
+    <h1>Cola de la cocina</h1>
+    <p>Pedidos activos, los más antiguos primero. Recarga la página para ver los nuevos.</p>
+
+    {% set puede_avanzar = current_user and 'update:pedidos' in current_user.permissions %}
+
+    {% if pedidos %}
+        {% for pedido in pedidos %}
+            <section style="border: 1px solid #999; padding: 0.5rem 1rem; margin-bottom: 1rem;">
+                <h2>Pedido #{{ pedido.id }} · {{ pedido.restaurante_nombre }}</h2>
+                <p>
+                    <strong>Estado:</strong> {{ etiquetas.get(pedido.estado, pedido.estado) }}
+                    · <strong>Fecha:</strong> {{ pedido.fecha.strftime('%Y-%m-%d') }}
+                    · <strong>Total:</strong> ${{ "%.2f"|format(pedido.total) }}
+                </p>
+                <ul>
+                    {% for item in pedido.items %}
+                        <li>{{ item.cantidad }} × {{ item.plato_nombre }}</li>
+                    {% endfor %}
+                </ul>
+
+                {# El admin ve la cola pero no avanza: el botón solo aparece con update:pedidos.
+                   La protección real es el decorador de cocina.avanzar. #}
+                {% set proximo = siguiente.get(pedido.estado) %}
+                {% if puede_avanzar and proximo %}
+                    <form action="{{ url_for('cocina.avanzar', pedido_id=pedido.id) }}" method="POST">
+                        <input type="hidden" name="estado" value="{{ proximo.nombre }}">
+                        <button type="submit">Pasar a: {{ proximo.etiqueta }}</button>
+                    </form>
+                {% endif %}
+            </section>
+        {% endfor %}
+    {% else %}
+        <p>No hay pedidos activos.</p>
+    {% endif %}
+{% endblock %}
