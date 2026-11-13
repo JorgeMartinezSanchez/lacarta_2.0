@@ -64,46 +64,45 @@ INSERT INTO content.platos (id, nombre, precio, disponible, restaurante_id) VALU
 -- cliente = el 'sub' del token de Auth0 (aquí, valores de ejemplo).
 -- Reemplázalos por el sub real de tus usuarios de prueba para verlos en "mis pedidos".
 INSERT INTO content.pedido (id, cliente, restaurante_id, estado, fecha, total) VALUES
-(1,  'auth0|cliente-demo-1', 1, 'entregado',      '2026-09-28', NULL),
-(2,  'auth0|cliente-demo-2', 1, 'entregado',      '2026-10-02', NULL),
-(3,  'auth0|cliente-demo-3', 1, 'pendiente',      '2026-10-23', NULL),
-(4,  'auth0|cliente-demo-1', 2, 'entregado',      '2026-09-30', NULL),
-(5,  'auth0|cliente-demo-2', 2, 'en_preparación', '2026-10-24', NULL),
-(6,  'auth0|cliente-demo-3', 2, 'cancelado',      '2026-10-10', NULL),
-(7,  'auth0|cliente-demo-1', 3, 'entregado',      '2026-10-05', NULL),
-(8,  'auth0|cliente-demo-2', 3, 'entregado',      '2026-10-12', NULL),
-(9,  'auth0|cliente-demo-3', 3, 'pendiente',      '2026-10-24', NULL),
-(10, 'auth0|cliente-demo-1', 4, 'entregado',      '2026-10-01', NULL),
-(11, 'auth0|cliente-demo-2', 4, 'en_preparación', '2026-10-24', NULL),
-(12, 'auth0|cliente-demo-3', 4, 'cancelado',      '2026-10-15', NULL),
-(13, 'auth0|cliente-demo-1', 5, 'entregado',      '2026-10-08', NULL),
-(14, 'auth0|cliente-demo-2', 5, 'entregado',      '2026-10-18', NULL),
-(15, 'auth0|cliente-demo-3', 5, 'pendiente',      '2026-10-24', NULL);
+(1,  'auth0|cliente-demo-1', 1, 'entregado',      '2026-09-28', 0),
+(2,  'auth0|cliente-demo-2', 1, 'entregado',      '2026-10-02', 0),
+(3,  'auth0|cliente-demo-3', 1, 'pendiente',      '2026-10-23', 0),
+(4,  'auth0|cliente-demo-1', 2, 'entregado',      '2026-09-30', 0),
+(5,  'auth0|cliente-demo-2', 2, 'en_preparacion', '2026-10-24', 0),
+(6,  'auth0|cliente-demo-3', 2, 'cancelado',      '2026-10-10', 0),
+(7,  'auth0|cliente-demo-1', 3, 'entregado',      '2026-10-05', 0),
+(8,  'auth0|cliente-demo-2', 3, 'entregado',      '2026-10-12', 0),
+(9,  'auth0|cliente-demo-3', 3, 'pendiente',      '2026-10-24', 0),
+(10, 'auth0|cliente-demo-1', 4, 'entregado',      '2026-10-01', 0),
+(11, 'auth0|cliente-demo-2', 4, 'en_preparacion', '2026-10-24', 0),
+(12, 'auth0|cliente-demo-3', 4, 'cancelado',      '2026-10-15', 0),
+(13, 'auth0|cliente-demo-1', 5, 'entregado',      '2026-10-08', 0),
+(14, 'auth0|cliente-demo-2', 5, 'entregado',      '2026-10-18', 0),
+(15, 'auth0|cliente-demo-3', 5, 'pendiente',      '2026-10-24', 0);
 
 -- ------------------------------------------------------------
 -- Items de pedido
 -- precio_unitario y restaurante_id se toman del plato, así
 -- siempre son consistentes con el catálogo.
--- (cantidad es VARCHAR en el modelo, por eso va como texto)
 -- ------------------------------------------------------------
 INSERT INTO content.item_pedido (pedido_id, plato_id, cantidad, precio_unitario, restaurante_id)
 SELECT v.pedido_id, v.plato_id, v.cantidad, pl.precio, pl.restaurante_id
 FROM (VALUES
-    (1,  1,  2), (1,  2,  '1'),
-    (2,  3,  1), (2,  4,  '3'), (2,  6,  '2'),
-    (3,  5,  2), (3,  1,  '1'),
-    (4,  7,  2), (4,  9,  '1'),
-    (5,  8,  1), (5,  10, '2'), (5,  11, '3'),
+    (1,  1,  2), (1,  2,  1),
+    (2,  3,  1), (2,  4,  3), (2,  6,  2),
+    (3,  5,  2), (3,  1,  1),
+    (4,  7,  2), (4,  9,  1),
+    (5,  8,  1), (5,  10, 2), (5,  11, 3),
     (6,  7,  1),
-    (7,  13, 2), (7,  15, '2'),
-    (8,  17, 1), (8,  18, '4'),
-    (9,  14, 2), (9,  16, '1'),
-    (10, 19, 2), (10, 21, '1'), (10, 23, '2'),
-    (11, 20, 1), (11, 22, '2'),
+    (7,  13, 2), (7,  15, 2),
+    (8,  17, 1), (8,  18, 4),
+    (9,  14, 2), (9,  16, 1),
+    (10, 19, 2), (10, 21, 1), (10, 23, 2),
+    (11, 20, 1), (11, 22, 2),
     (12, 21, 1),
-    (13, 25, 2), (13, 28, '1'), (13, 30, '2'),
-    (14, 26, 1), (14, 27, '1'), (14, 29, '2'),
-    (15, 28, 2), (15, 30, '1')
+    (13, 25, 2), (13, 28, 1), (13, 30, 2),
+    (14, 26, 1), (14, 27, 1), (14, 29, 2),
+    (15, 28, 2), (15, 30, 1)
 ) AS v(pedido_id, plato_id, cantidad)
 JOIN content.platos pl ON pl.id = v.plato_id;
 
@@ -113,7 +112,7 @@ JOIN content.platos pl ON pl.id = v.plato_id;
 UPDATE content.pedido p
 SET total = t.total
 FROM (
-    SELECT pedido_id, SUM(cantidad::int * precio_unitario) AS total
+    SELECT pedido_id, SUM(cantidad * precio_unitario) AS total
     FROM content.item_pedido
     GROUP BY pedido_id
 ) t
