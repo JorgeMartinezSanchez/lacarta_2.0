@@ -34,15 +34,19 @@ with connection.cursor() as c:
 echo "==> Creando cuenta admin de Django:"
 echo "Username: ${DJANGO_SUPERUSER_USERNAME}"
 echo "Email: ${DJANGO_SUPERUSER_EMAIL}"
-echo "Password: ${DJANGO_SUPERUSER_PASSWORD}"
 
 python manage.py createsuperuser --noinput 2>/dev/null || echo "Superusuario ya existe, se omite."
 
 echo "==> Recolectando estáticos..."
-python manage.py collectstatic --noinput || true
+python manage.py collectstatic --noinput   # si falla, migrate falla y Flask/Django no arrancan
 
 echo "==> Inicializando datos de prueba..."
 python manage.py shell < initialize_test_data.py
 
-echo "==> Arrancando Gunicorn..."
-exec "$@"
+# Producción (servicio migrate): no recibe comando, termina aquí con código 0.
+# Desarrollo (Dockerfile.dev): recibe "runserver" como comando y lo ejecuta.
+if [ "$#" -gt 0 ]; then
+    echo "==> Arrancando: $*"
+    exec "$@"
+fi
+echo "==> Preparación terminada."
