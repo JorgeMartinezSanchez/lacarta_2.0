@@ -57,7 +57,7 @@ class ItemPedidosService:
             item = self.items_repo.create(ItemPedido(
                 pedido_id=pedido.id,
                 plato_id=plato.id,
-                cantidad=str(cantidad),          # la columna es String (ver nota)
+                cantidad=cantidad,
                 precio_unitario=plato.precio,    # precio del momento del pedido
                 restaurante_id=plato.restaurante_id,
             ))
@@ -87,7 +87,7 @@ class ItemPedidosService:
             if itemData.pedido_id != item.pedido_id:
                 raise BusinessRuleError("Un ítem no se puede mover a otro pedido.")
 
-            campos = {"cantidad": str(self._validar_cantidad(itemData.cantidad))}
+            campos = {"cantidad": self._validar_cantidad(itemData.cantidad)}
             if itemData.plato_id != item.plato_id:
                 plato = self._find_plato_para(pedido, itemData.plato_id)
                 campos.update(plato_id=plato.id, precio_unitario=plato.precio)
@@ -144,7 +144,7 @@ class ItemPedidosService:
         if pedido is None:
             raise NotFoundError(f"No existe el pedido {pedido_id}.")
         if not estado_de(pedido).puede_modificarse():  # regla 12, vía patrón State
-            raise BusinessRuleError(f"Un pedido {pedido.estado} ya no se puede modificar.")
+            raise BusinessRuleError(f"Un pedido {estado_de(pedido).etiqueta.lower()} ya no se puede modificar.")
         return pedido
 
     def _find_plato_para(self, pedido: Pedido, plato_id: int) -> Plato:
@@ -163,18 +163,18 @@ class ItemPedidosService:
             cantidad = int(cantidad)
         except (TypeError, ValueError):
             raise BusinessRuleError("La cantidad debe ser un número entero.") from None
-        if cantidad <= 0:
-            raise BusinessRuleError("La cantidad debe ser mayor a 0.")
+        if not 1 <= cantidad <= 20:  # R1.5; la base lo refuerza con un CHECK
+            raise BusinessRuleError("La cantidad debe ser un entero entre 1 y 20.")
         return cantidad
 
     def _recalcular_total(self, pedido: Pedido) -> None:
         # refresh recarga pedido.items desde la base (ya con el INSERT/UPDATE/DELETE del flush)
         self.pedidos_repo.refresh(pedido)
         total = sum(
-            (Decimal(i.precio_unitario) * int(i.cantidad) for i in pedido.items),
+            (i.precio_unitario * i.cantidad for i in pedido.items),
             Decimal("0"),
         )
-        self.pedidos_repo.update(pedido, total=total if pedido.items else None)
+        self.pedidos_repo.update(pedido, total=total)  # 0 si no quedan ítems (total es NOT NULL)
 
     @staticmethod
     def _to_dto(i: ItemPedido) -> ItemPedidosDTO_Output:
@@ -182,7 +182,7 @@ class ItemPedidosService:
             id=i.id,
             pedido_id=i.pedido_id,
             plato_id=i.plato_id,
-            cantidad=int(i.cantidad),
+            cantidad=i.cantidad,
             precio_unitario=float(i.precio_unitario),
             restaurante_id=i.restaurante_id,
             plato_nombre=i.plato.nombre,

@@ -37,21 +37,25 @@ class PedidosService:
 
     # --- escritura -------------------------------------------------------
 
-    def create_pedido(self, newPedido: PedidosDTO_Input) -> PedidosDTO_Output:
+    def create_pedido(self, newPedido: PedidosDTO_Input, cliente: str) -> PedidosDTO_Output:
         """Crea un pedido vacío.
 
         estado, fecha y total NO se toman del DTO: los decide el servidor.
+        cliente es el 'sub' del token de Auth0 (lo pasa la ruta), nunca un dato del formulario.
         Todo pedido nace 'pendiente', con la fecha de hoy y sin total
         (el total lo calcula ItemPedidosService al agregar ítems).
         """
         try:
             self._validar_restaurante(newPedido.restaurante_id)
+            if not cliente:
+                raise BusinessRuleError("No se pudo identificar al cliente.")
 
             pedido = self.pedidos_repo.create(Pedido(
+                cliente=cliente,
                 restaurante_id=newPedido.restaurante_id,
                 estado=Pendiente.nombre,
                 fecha=date.today(),
-                total=None,
+                total=0,
             ))
             self.pedidos_repo.commit()
 
@@ -59,12 +63,12 @@ class PedidosService:
         except BusinessRuleError as e:
             # Error esperado (validación / regla de negocio): lo ve el usuario.
             self.pedidos_repo.rollback()
-            logger.warning("create_pedido(newPedido=%r) rechazado: %s", newPedido, e)
+            logger.warning("create_pedido(newPedido=%r, cliente=%r) rechazado: %s", newPedido, cliente, e)
             raise
         except Exception:
             # Error inesperado (base de datos, bug): traza completa en el log.
             self.pedidos_repo.rollback()
-            logger.exception("create_pedido(newPedido=%r) falló", newPedido)
+            logger.exception("create_pedido(newPedido=%r, cliente=%r) falló", newPedido, cliente)
             raise
         finally:
             self.pedidos_repo.close()
@@ -81,7 +85,7 @@ class PedidosService:
 
             if pedidoData.restaurante_id != pedido.restaurante_id:
                 if not estado_de(pedido).puede_modificarse():
-                    raise BusinessRuleError(f"Un pedido {pedido.estado} ya no se puede modificar.")
+                    raise BusinessRuleError(f"Un pedido {estado_de(pedido).etiqueta.lower()} ya no se puede modificar.")
                 if pedido.items:
                     raise BusinessRuleError("No se puede cambiar el restaurante de un pedido con ítems.")
                 self._validar_restaurante(pedidoData.restaurante_id)
@@ -134,7 +138,7 @@ class PedidosService:
             pedido = self._find(pedido_id)
 
             if pedido.estado not in (Pendiente.nombre, Cancelado.nombre):
-                raise BusinessRuleError(f"No se puede eliminar un pedido {pedido.estado}.")
+                raise BusinessRuleError(f"No se puede eliminar un pedido {estado_de(pedido).etiqueta.lower()}.")
 
             # cascade="all, delete-orphan" del modelo borra también sus ítems
             self.pedidos_repo.delete(pedido)
@@ -171,6 +175,7 @@ class PedidosService:
             restaurante_id=p.restaurante_id,
             estado=p.estado,
             fecha=p.fecha,
-            total=float(p.total) if p.total is not None else None,
+            total=float(p.total),
+            cliente=p.cliente,
             restaurante_nombre=p.restaurante.nombre,
         )
