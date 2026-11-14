@@ -77,3 +77,16 @@ class ItemPedido(db.Model):
       nullable=False,
   )
   plato = db.relationship("Plato")
+
+class Empleado(db.Model):
+    __tablename__ = "empleado"
+    __table_args__ = {"schema": "content"}
+
+    id = db.Column(db.Integer, primary_key=True)
+    primer_nombre = db.Column(db.String(50), nullable=False)
+    segundo_nombre = db.Column(db.String(50), nullable=True)
+    apellido = db.Column(db.String(50), nullable=False)
+    ci = db.Column(db.String(80), nullable=False)
+    telefono = db.Column(db.String(30), nullable=False)
+    email = db.Column(db.String(200), nullable=False)
+   

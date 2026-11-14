@@ -32,7 +32,7 @@ def create_app(config_class=Config):
 
     from .errors import register_error_handlers
 
-    from .routes import restaurantes_bp, platos_bp, pedidos_bp, cocina_bp
+    from .routes import restaurantes_bp, platos_bp, pedidos_bp, cocina_bp, empleados_bp
 
     init_auth0(app)
     # One key client per app, so its cache lives as long as the process.
@@ -42,6 +42,7 @@ def create_app(config_class=Config):
     app.register_blueprint(platos_bp)
     app.register_blueprint(pedidos_bp)
     app.register_blueprint(cocina_bp)
+    app.register_blueprint(empleados_bp)
 
     app.register_blueprint(auth_bp)
     app.register_error_handler(AuthError, handle_auth_error)

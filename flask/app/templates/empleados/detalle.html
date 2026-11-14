@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block titulo %}Detalle de {{ empleado.nombre_completo }}{% endblock %}
+
+{% block contenido %}
+    {% set permisos = current_user.permissions if current_user else [] %}
+    <h1>{{ empleado.nombre_completo }}</h1>
+    <p><strong>Primer nombre:</strong> {{ empleado.primer_nombre }}</p>
+    <p><strong>Segundo nombre:</strong> {{ empleado.segundo_nombre or 'No tiene' }}</p>
+    <p><strong>Apellido:</strong> {{ empleado.apellido }}</p>
+    <p><strong>CI:</strong> {{ empleado.ci }}</p>
+    <p><strong>Teléfono:</strong> {{ empleado.telefono }}</p>
+    <p><strong>Email:</strong> {{ empleado.email }}</p>
+
+    <p>
+        {% if 'write:empleados' in permisos %}
+            <a href="{{ url_for('empleados.editar_empleado', empleado_id=empleado.id) }}">Editar Empleado</a>
+        {% endif %}
+        {% if 'delete:empleados' in permisos %}
+            <form action="{{ url_for('empleados.eliminar_empleado', empleado_id=empleado.id) }}"
+                  method="POST" style="display:inline;"
+                  onsubmit="return confirm('¿Estás seguro de eliminar este empleado?');">
+                <button type="submit" style="color: red;">Eliminar Empleado</button>
+            </form>
+        {% endif %}
+    </p>
+
+    <p><br><a href="{{ url_for('empleados.listar_empleados') }}">Volver al listado</a></p>
+{% endblock %}

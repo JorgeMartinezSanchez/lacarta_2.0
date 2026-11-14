@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+
+{% block titulo %}
+    {% if empleado_id %}Editar Empleado{% else %}Nuevo Empleado{% endif %}
+{% endblock %}
+
+{% block contenido %}
+    <h1>{% if empleado_id %}Editar Empleado{% else %}Registrar Nuevo Empleado{% endif %}</h1>
+
+    <!-- Si hay 'empleado_id' va a la ruta de editar, si no, a la de crear.
+         'valores' trae los datos del empleado (editar) o lo que escribió el usuario (error). -->
+    <form action="{% if empleado_id %}{{ url_for('empleados.editar_empleado', empleado_id=empleado_id) }}{% else %}{{ url_for('empleados.crear_empleado') }}{% endif %}" method="POST">
+
+        <div>
+            <label for="primer_nombre">Primer nombre:*</label><br>
+            <input type="text" id="primer_nombre" name="primer_nombre" maxlength="50"
+                   value="{{ valores.get('primer_nombre') or '' }}" required>
+        </div>
+        <br>
+
+        <div>
+            <label for="segundo_nombre">Segundo nombre:</label><br>
+            <input type="text" id="segundo_nombre" name="segundo_nombre" maxlength="50"
+                   value="{{ valores.get('segundo_nombre') or '' }}">
+        </div>
+        <br>
+
+        <div>
+            <label for="apellido">Apellido:*</label><br>
+            <input type="text" id="apellido" name="apellido" maxlength="50"
+                   value="{{ valores.get('apellido') or '' }}" required>
+        </div>
+        <br>
+
+        <div>
+            <label for="ci">CI:*</label><br>
+            <input type="text" id="ci" name="ci" maxlength="80"
+                   value="{{ valores.get('ci') or '' }}" required>
+        </div>
+        <br>
+
+        <div>
+            <label for="telefono">Teléfono:*</label><br>
+            <input type="text" id="telefono" name="telefono" maxlength="30"
+                   value="{{ valores.get('telefono') or '' }}" required>
+        </div>
+        <br>
+
+        <div>
+            <label for="email">Email:*</label><br>
+            <input type="email" id="email" name="email" maxlength="200"
+                   value="{{ valores.get('email') or '' }}" required>
+        </div>
+        <br>
+
+        <button type="submit">{% if empleado_id %}Guardar Cambios{% else %}Crear Empleado{% endif %}</button>
+    </form>
+
+    <p><br><a href="{% if empleado_id %}{{ url_for('empleados.detalle_empleado', empleado_id=empleado_id) }}{% else %}{{ url_for('empleados.listar_empleados') }}{% endif %}">Cancelar / Volver</a></p>
+{% endblock %}
