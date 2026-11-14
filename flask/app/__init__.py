@@ -1,7 +1,7 @@
 import logging
 import os
 
-from flask import Flask
+from flask import Flask, redirect, url_for
 from werkzeug.middleware.proxy_fix import ProxyFix
 from .config import Config
 from .extensions import db
@@ -56,5 +56,10 @@ def create_app(config_class=Config):
     @app.route('/health')
     def health():
         return 'OK', 200
+
+    @app.route('/')
+    def inicio():
+        # La carta es la página de inicio (pública, sin login).
+        return redirect(url_for("restaurantes.listar_restaurantes"))
 
     return app

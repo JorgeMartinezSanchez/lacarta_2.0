@@ -21,16 +21,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-2em5!6(j)5n_$t9t_-rwvd*@qv3r1v**l5^%a(875g!yjh)ine'
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Producción: desactivado salvo que el .env diga DJANGO_DEBUG=1 (solo en desarrollo).
+DEBUG = os.environ.get("DJANGO_DEBUG", "0") == "1"
 
 ALLOWED_HOSTS = [
     "lacarta2-admin.mooo.com",
     "localhost",
     "127.0.0.1"
 ]
+
+# Detrás de Nginx con HTTPS (R5.4):
+# - Nginx termina el TLS y reenvía a Django por HTTP; X-Forwarded-Proto le dice
+#   a Django que la petición original era HTTPS (mismo papel que ProxyFix en Flask).
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# - El formulario de login del admin hace POST: sin esto, "CSRF verification failed".
+CSRF_TRUSTED_ORIGINS = ["https://lacarta2-admin.mooo.com"]
+# - Cookies de sesión y CSRF solo por HTTPS (fuera de desarrollo).
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
 
 
 # Application definition
