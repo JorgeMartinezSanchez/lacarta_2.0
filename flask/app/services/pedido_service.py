@@ -57,10 +57,13 @@ class PedidosService:
                 plato = self.platos_repo.getOne(item.plato_id)
                 if plato is None:
                     raise BusinessRuleError(f"El plato {item.plato_id} no existe.")
+                
                 if plato.restaurante_id != nuevo.restaurante_id:
                     raise BusinessRuleError(f"El plato '{plato.nombre}' es de otro restaurante.")
+                
                 if not plato.disponible:
                     raise BusinessRuleError(f"El plato '{plato.nombre}' no está disponible.")
+                
                 cantidad = self._validar_cantidad(item.cantidad, plato.nombre)
 
                 items.append(ItemPedido(
