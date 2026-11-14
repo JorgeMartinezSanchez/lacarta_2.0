@@ -11,7 +11,6 @@ class RestaurantesService:
     def __init__(self, restaurantes_repo: RestauranteRepository):
         self.restaurantes_repo = restaurantes_repo
 
-    # --- lectura ---------------------------------------------------------
 
     def get_all_restaurants(self, ciudad: str | None = None) -> list[RestauranteDTO_Output]:
         try:
@@ -30,7 +29,6 @@ class RestaurantesService:
         finally:
             self.restaurantes_repo.close()
 
-    # --- escritura -------------------------------------------------------
 
     def create_restaurant(self, newRes: RestauranteDTO_Input) -> RestauranteDTO_Output:
         try:
@@ -71,7 +69,7 @@ class RestaurantesService:
             logger.warning("update_restaurant(res_id=%r, resData=%r) rechazado: %s", res_id, resData, e)
             raise
         except Exception:
-            # Error inesperado (base de datos, bug): traza completa en el log.
+
             self.restaurantes_repo.rollback()
             logger.exception("update_restaurant(res_id=%r, resData=%r) falló", res_id, resData)
             raise
@@ -81,23 +79,22 @@ class RestaurantesService:
     def delete_restaurant(self, res_id: int) -> None:
         try:
             restaurante = self._find(res_id)
-            # cascade="all, delete-orphan" del modelo borra también sus platos y pedidos
+
             self.restaurantes_repo.delete(restaurante)
             self.restaurantes_repo.commit()
         except BusinessRuleError as e:
-            # Error esperado (validación / regla de negocio): lo ve el usuario.
+
             self.restaurantes_repo.rollback()
             logger.warning("delete_restaurant(res_id=%r) rechazado: %s", res_id, e)
             raise
         except Exception:
-            # Error inesperado (base de datos, bug): traza completa en el log.
+
             self.restaurantes_repo.rollback()
             logger.exception("delete_restaurant(res_id=%r) falló", res_id)
             raise
         finally:
             self.restaurantes_repo.close()
 
-    # --- ayudantes privados ----------------------------------------------
 
     def _find(self, res_id: int) -> Restaurante:
         restaurante = self.restaurantes_repo.getOne(res_id)

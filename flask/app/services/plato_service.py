@@ -13,9 +13,7 @@ logger = logging.getLogger(__name__)
 class PlatosService:
     def __init__(self, platos_repo: PlatoRepository, restaurantes_repo: RestauranteRepository):
         self.platos_repo = platos_repo
-        self.restaurantes_repo = restaurantes_repo  # para validar que el restaurante exista
-
-    # --- lectura ---------------------------------------------------------
+        self.restaurantes_repo = restaurantes_repo 
 
     def get_all_platos(self, restaurante_id: int | None = None) -> list[PlatosDTO_Output]:
         try:
@@ -33,7 +31,6 @@ class PlatosService:
         finally:
             self.platos_repo.close()
 
-    # --- escritura -------------------------------------------------------
 
     def create_plato(self, newPlato: PlatosDTO_Input) -> PlatosDTO_Output:
         try:
@@ -100,7 +97,7 @@ class PlatosService:
         finally:
             self.platos_repo.close()
 
-    # --- ayudantes privados ----------------------------------------------
+
 
     def _find(self, plato_id: int) -> Plato:
         plato = self.platos_repo.getOne(plato_id)

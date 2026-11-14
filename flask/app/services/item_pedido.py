@@ -23,7 +23,7 @@ class ItemPedidosService:
         self.pedidos_repo = pedidos_repo
         self.platos_repo = platos_repo
 
-    # --- lectura ---------------------------------------------------------
+
 
     def get_all_items(self, pedido_id: int | None = None) -> list[ItemPedidosDTO_Output]:
         try:
@@ -41,7 +41,7 @@ class ItemPedidosService:
         finally:
             self.items_repo.close()
 
-    # --- escritura -------------------------------------------------------
+
 
     def create_item(self, newItem: ItemPedidosDTO_Input) -> ItemPedidosDTO_Output:
         """Agrega un plato a un pedido.
@@ -131,7 +131,6 @@ class ItemPedidosService:
         finally:
             self.items_repo.close()
 
-    # --- ayudantes privados ----------------------------------------------
 
     def _find(self, item_id: int) -> ItemPedido:
         item = self.items_repo.getOne(item_id)

@@ -11,3 +11,4 @@ claude_chatresume.txt
 __pycache__/
 .pytest_cache/
 scripts/
+.~lock.*

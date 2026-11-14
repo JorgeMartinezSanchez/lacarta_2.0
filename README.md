@@ -122,29 +122,169 @@ flask/app/
 2. **FreeDNS**: los registros A de `lacarta2` y `lacarta2-admin` apuntan a la IP pública de la instancia. Compruébalo con `dig +short +norecurse lacarta2.mooo.com @ns1.afraid.org` antes de pedir certificados.
 3. **AWS**: el Security Group de la instancia permite la entrada por los puertos 22, 80 y 443.
 
-### En una instancia EC2 nueva (Ubuntu)
+### En una instancia EC2 nueva (PRODUCCIÓN)
+
+crear los scripts con los siguientes comandos
 
 ```bash
-# 1) Instalar Docker y Docker Compose
-bash scripts/ec2_1_instalar.sh
-exit                                   # volver a entrar por SSH (grupo docker)
-
-# 2) Desde TU computadora: copiar el script y el .env (el .env nunca va al repositorio)
-cp .env.example .env                   # la primera vez: completar con los valores reales
-scp -i <llave>.pem scripts/ec2_2_desplegar.sh .env ubuntu@<ip>:~/
-
-# 3) En la instancia: clonar la rama, obtener certificados y levantar todo
-mkdir -p lacarta_2.0 && mv .env lacarta_2.0/
-bash ec2_2_desplegar.sh
+nano setup1.sh
 ```
 
-`ec2_2_desplegar.sh` hace, en este orden:
-1. Clona la rama `refactorizacion_capas`.
-2. Comprueba que el `.env` exista.
-3. Obtiene un certificado de Let's Encrypt para los dos dominios (`certbot --standalone`).
-4. Configura la renovación automática, con hooks que detienen Nginx durante la renovación.
-5. Ejecuta `docker compose up -d --build`.
-6. Comprueba la renovación con `certbot renew --dry-run`.
+`setup1.sh`
+```bash
+set -euo pipefail
+
+verde()  { echo -e "\033[32m$*\033[0m"; }
+
+# --- Docker ------------------------------------------------------------------
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl gnupg git docker.io
+sudo systemctl enable --now docker
+sudo usermod -aG docker "$USER"     # usar docker sin sudo (tras volver a entrar)
+verde "== Docker instalado =="
+
+# --- Docker Compose (plugin oficial: "docker compose") ------------------------
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+    | sudo gpg --dearmor --yes -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+    | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update
+sudo apt-get install -y docker-compose-plugin
+verde "== Docker Compose instalado: $(docker compose version) =="
+
+echo
+verde "== Paso 1 completo =="
+echo "Escribe \"exit\", vuelve a entrar por SSH y ejecuta: bash ec2_2_desplegar.sh"
+```
+
+`setup2.sh`
+```bash
+set -euo pipefail
+
+REPO="git@github.com:JorgeMartinezSanchez/lacarta_2.0.git"
+RAMA="refactorizacion_capas"   # rama que se despliega
+PROYECTO="$HOME/lacarta_2.0"
+DOMINIOS=(lacarta2.mooo.com lacarta2-admin.mooo.com)   # carta y admin
+
+verde()    { echo -e "\033[32m$*\033[0m"; }
+amarillo() { echo -e "\033[33m$*\033[0m"; }
+rojo()     { echo -e "\033[31m$*\033[0m"; }
+
+# --- 1. Llave SSH para clonar el repositorio privado -------------------------
+if [ ! -f "$HOME/.ssh/id_ed25519" ]; then
+    ssh-keygen -t ed25519 -N "" -C "lacarta-ec2" -f "$HOME/.ssh/id_ed25519"
+fi
+
+# GitHub responde "Hi <usuario>! You've successfully authenticated..." pero
+# SIEMPRE sale con código 1 (no da shell). Por eso se guarda la salida en una
+# variable y se revisa el texto, en vez de usar el código de salida.
+github_ok() {
+    local salida
+    salida=$(ssh -T -o StrictHostKeyChecking=accept-new git@github.com 2>&1 || true)
+    [[ "$salida" == *"successfully authenticated"* ]]
+}
+
+if ! github_ok; then
+    amarillo "== Agrega esta llave pública en GitHub (Settings → SSH keys o Deploy keys) =="
+    echo; cat "$HOME/.ssh/id_ed25519.pub"; echo
+    read -r -p "Presiona Enter cuando la hayas agregado... " _
+    if ! github_ok; then
+        rojo "== Error de autenticación con GitHub =="
+        ssh -T git@github.com 2>&1 || true   # muestra el mensaje real de GitHub
+        exit 1
+    fi
+fi
+verde "== Autenticación con GitHub correcta =="
+
+# --- 2. Clonar o actualizar ---------------------------------------------------
+if [ -d "$PROYECTO/.git" ]; then
+    git -C "$PROYECTO" fetch origin "$RAMA"
+    git -C "$PROYECTO" checkout "$RAMA"
+    git -C "$PROYECTO" pull --ff-only origin "$RAMA"
+else
+    git clone --branch "$RAMA" "$REPO" "$PROYECTO"
+fi
+verde "== Código en $PROYECTO (rama $(git -C "$PROYECTO" branch --show-current)) =="
+
+# --- 3. El .env NO está en el repositorio: se copia desde tu computadora ------
+if [ ! -f "$PROYECTO/.env" ]; then
+    IP=$(curl -s --max-time 3 https://checkip.amazonaws.com || echo "<ip-de-la-instancia>")
+    rojo "== Falta $PROYECTO/.env =="
+    echo "Desde TU computadora (en la carpeta del proyecto) ejecuta:"
+    echo "    scp -i clave.pem .env ubuntu@${IP}:~/lacarta_2.0/.env"
+    echo "Usa .env.example como plantilla. Luego vuelve a ejecutar este script."
+    exit 1
+fi
+chmod 600 "$PROYECTO/.env"
+verde "== .env presente (permisos 600) =="
+
+# --- 4. Certificados de Let's Encrypt -----------------------------------------
+sudo apt-get install -y certbot
+sudo resolvectl flush-caches || true
+
+CERT="/etc/letsencrypt/live/${DOMINIOS[0]}/fullchain.pem"
+if sudo test -f "$CERT"; then
+    verde "== Certificado ya existe, se omite =="
+else
+    # --standalone levanta un servidor temporal en el puerto 80, así que Nginx
+    # todavía no debe estar corriendo. Un solo certificado cubre ambos dominios
+    # y queda en /etc/letsencrypt/live/<primer dominio>/.
+    ARGS=()
+    for d in "${DOMINIOS[@]}"; do ARGS+=(-d "$d"); done
+    sudo docker compose -f "$PROYECTO/docker-compose.yml" stop nginx 2>/dev/null || true
+    sudo certbot certonly --standalone "${ARGS[@]}" \
+        || { rojo "Error: Certbot no pudo obtener el certificado."; exit 1; }
+    verde "== Certificado obtenido =="
+fi
+
+# --- 5. Renovación automática (R5.2) ------------------------------------------
+# El timer de certbot renueva solo, pero --standalone necesita el puerto 80,
+# que Nginx ocupa. Estos hooks detienen Nginx justo antes y lo reinician después.
+COMPOSE="docker compose -f $PROYECTO/docker-compose.yml"
+sudo install -d /etc/letsencrypt/renewal-hooks/pre /etc/letsencrypt/renewal-hooks/post
+printf '#!/bin/sh\n%s stop nginx\n'  "$COMPOSE" | sudo tee /etc/letsencrypt/renewal-hooks/pre/detener-nginx.sh  > /dev/null
+printf '#!/bin/sh\n%s start nginx\n' "$COMPOSE" | sudo tee /etc/letsencrypt/renewal-hooks/post/iniciar-nginx.sh > /dev/null
+sudo chmod +x /etc/letsencrypt/renewal-hooks/pre/detener-nginx.sh /etc/letsencrypt/renewal-hooks/post/iniciar-nginx.sh
+sudo systemctl enable --now certbot.timer
+verde "== Renovación automática configurada =="
+
+# --- 6. Levantar la aplicación ------------------------------------------------
+cd "$PROYECTO"
+docker compose up -d --build
+docker compose ps
+
+# --- 7. Comprobar la renovación (con Nginx ya corriendo) ----------------------
+sudo certbot renew --dry-run \
+    && verde "== Renovación de prueba correcta ==" \
+    || amarillo "== La renovación de prueba falló: revisa 'sudo certbot renew --dry-run' =="
+systemctl list-timers certbot.timer --no-pager
+
+echo
+verde "== Paso 2 completo =="
+echo "Carta:  https://${DOMINIOS[0]}"
+echo "Admin:  https://${DOMINIOS[1]}/admin/"
+```
+
+```bash
+chmod +x setup*.sh
+# importante antes de ejecutar
+```
+
+`setup1.sh` instala docker y docker compose, que los cambios del usuario docker se aplique, se tiene que salir de la sesion.
+
+`setup2.sh` realiza lo siguiente:
+1. Genera la llave para que ingreses a **Repositorio lacarta_2.0 -> Settings -> Deploy keys -> Add Deploy Key** y copies la clave ssh en el campo de key.
+2. Clona el repositorio
+3. Te pedira que copies el .env desde la maquina local
+4. Instala los certificados de Lets Encrypt
+5. El timer de certbot renueva solo, pero --standalone necesita el puerto 80 para nginx.
+6. Levanta el proyecto
+7. Comprueba la renovacion
 
 ### Comandos manuales equivalentes
 

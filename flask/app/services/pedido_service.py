@@ -13,7 +13,7 @@ from ..state.pedidos import ACTIVOS, DESTINOS_COCINA, Pendiente, cambiar_estado,
 
 logger = logging.getLogger(__name__)
 
-CANTIDAD_MIN, CANTIDAD_MAX = 1, 20  # R1.5 (la base lo refuerza con un CHECK)
+CANTIDAD_MIN, CANTIDAD_MAX = 1, 20 
 
 
 class PedidosService:
@@ -27,9 +27,6 @@ class PedidosService:
         self.restaurantes_repo = restaurantes_repo
         self.platos_repo = platos_repo
 
-    # =====================================================================
-    # Cliente
-    # =====================================================================
 
     def create_pedido(self, nuevo: NuevoPedidoDTO, cliente: str) -> PedidosDTO_Output:
         """R1: crea el pedido con TODOS sus ítems en una sola transacción.
@@ -128,9 +125,7 @@ class PedidosService:
         finally:
             self.pedidos_repo.close()
 
-    # =====================================================================
-    # Cocina
-    # =====================================================================
+
 
     def get_cola_cocina(self) -> list[PedidosDTO_Output]:
         """Pedidos activos (pendiente, en preparación, listo), los más antiguos primero."""
@@ -168,9 +163,7 @@ class PedidosService:
         finally:
             self.pedidos_repo.close()
 
-    # =====================================================================
-    # Ayudantes privados
-    # =====================================================================
+
 
     def _find_de_cliente(self, pedido_id: int, cliente: str) -> Pedido:
         pedido = self.pedidos_repo.get_de_cliente(pedido_id, cliente)

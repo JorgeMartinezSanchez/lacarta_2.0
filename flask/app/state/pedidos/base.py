@@ -16,7 +16,7 @@ class EstadoPedido(ABC):
     nombre = ""    # el valor que se guarda en Pedido.estado (igual que en el CHECK de Django)
     etiqueta = ""  # cómo se muestra en pantalla
 
-    # --- acciones (transiciones) -----------------------------------------
+
 
     def preparar(self, pedido):
         self._denegar("preparar")
@@ -30,7 +30,6 @@ class EstadoPedido(ABC):
     def cancelar(self, pedido):
         self._denegar("cancelar")
 
-    # --- consultas ---------------------------------------------------------
 
     def puede_modificarse(self):
         """¿Se pueden agregar, quitar o cambiar ítems? (regla 12)"""
@@ -39,7 +38,7 @@ class EstadoPedido(ABC):
     def es_final(self):
         return False
 
-    # --- ayudantes ---------------------------------------------------------
+
 
     def _cambiar(self, pedido, estado_destino):
         pedido.estado = estado_destino.nombre
