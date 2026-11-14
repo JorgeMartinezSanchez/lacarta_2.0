@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+
+{% block titulo %}Lista de Empleados{% endblock %}
+
+{% block contenido %}
+    {% set permisos = current_user.permissions if current_user else [] %}
+    <h1>Empleados</h1>
+
+    {% if 'write:empleados' in permisos %}
+        <p>
+            <a href="{{ url_for('empleados.crear_empleado') }}">Registrar nuevo empleado</a>
+        </p>
+    {% endif %}
+
+    {% if empleados %}
+        <table border="1" cellpadding="5" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Nombre completo</th>
+                    <th>CI</th>
+                    <th>Teléfono</th>
+                    <th>Email</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in empleados %}
+                <tr>
+                    <td>{{ e.nombre_completo }}</td>
+                    <td>{{ e.ci }}</td>
+                    <td>{{ e.telefono }}</td>
+                    <td>{{ e.email }}</td>
+                    <td>
+                        <a href="{{ url_for('empleados.detalle_empleado', empleado_id=e.id) }}">Ver detalle</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No hay empleados registrados.</p>
+    {% endif %}
+{% endblock %}

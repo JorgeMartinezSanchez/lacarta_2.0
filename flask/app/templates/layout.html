@@ -19,6 +19,9 @@
             {% if 'read:pedidos' in permisos %}
                 <a href="{{ url_for('cocina.cola') }}" style="margin-left: 1rem;">Cocina</a>
             {% endif %}
+            {% if 'read:empleados' in permisos %}
+                <a href="{{ url_for('empleados.listar_empleados') }}" style="margin-left: 1rem;">Empleados</a>
+            {% endif %}
 
             {% if current_user %}
                 <span style="margin-left: 1rem;">
