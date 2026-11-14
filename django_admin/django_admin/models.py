@@ -104,3 +104,22 @@ class ItemPedido(models.Model):
 
     def __str__(self):
         return f"Item {self.id} - Plato ID: {self.plato_id}"
+
+class Empleado(models.Model):
+    primer_nombre = models.CharField(max_length=50)
+    segundo_nombre = models.CharField(max_length=50, blank=True, null=True)
+    apellido = models.CharField(max_length=50)
+    ci = models.CharField(max_length=80)
+    telefono = models.CharField(max_length=30)
+    email = models.CharField(max_length=200)
+
+    class Meta:
+        db_table = 'content"."empleado'
+        verbose_name = "Empleado"
+        verbose_name_plural = "Empleados"
+
+    def __str__(self):
+        segundo = (self.segundo_nombre or "").strip()
+        if segundo:
+            return f"{self.primer_nombre} {segundo} {self.apellido}"
+        return f"{self.primer_nombre} {self.apellido}"
