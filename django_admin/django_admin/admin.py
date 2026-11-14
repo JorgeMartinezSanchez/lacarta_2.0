@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import ItemPedido, Pedido, Plato, Restaurante
+from .models import Empleado, ItemPedido, Pedido, Plato, Restaurante
 
 
 # ---------------------------------------------------------------------------
@@ -85,3 +85,9 @@ class PlatoAdmin(admin.ModelAdmin):
     list_display = ("id", "nombre", "restaurante", "precio", "disponible")
     list_filter = ("disponible", "restaurante")
     search_fields = ("nombre",)
+
+@admin.register(Empleado)
+class EmpleadoAdmin(admin.ModelAdmin):
+    list_display = ("id", "primer_nombre", "segundo_nombre", "apellido", "ci", "telefono", "email")
+    search_fields = ("primer_nombre", "segundo_nombre", "apellido", "ci", "email")
+    ordering = ("apellido", "primer_nombre")
