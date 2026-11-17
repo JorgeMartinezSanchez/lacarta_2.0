@@ -1,16 +1,35 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso denegado</title>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/restaurantes/">Restaurantes</a>
+            <!-- Se muestran con JS según los permisos de GET /auth/me (solo UX). -->
+            <a href="/pedidos/" id="nav-pedidos" style="margin-left: 1rem;" hidden>Mis pedidos</a>
+            <a href="/cocina/" id="nav-cocina" style="margin-left: 1rem;" hidden>Cocina</a>
+            <a href="/empleados/" id="nav-empleados" style="margin-left: 1rem;" hidden>Empleados</a>
+            <span id="nav-usuario" style="margin-left: 1rem;" hidden></span>
+            <button type="button" id="btn-logout" style="margin-left: 1rem;" hidden>Cerrar sesión</button>
+            <a href="/auth/login" id="nav-login" style="margin-left: 1rem;">Iniciar sesión</a>
+        </nav>
+        <hr>
+    </header>
 
-{% block titulo %}Acceso denegado{% endblock %}
+    <main>
+        <!-- Mensajes de éxito / error -->
+        <ul id="mensajes"></ul>
 
-{% block contenido %}
-    <section class="card auth-card">
-        <h2>{{ status }} · Access denied</h2>
-        <p>{{ message }}</p>
-
-        <p>
-            <a href="{{ url_for('restaurantes.listar_restaurantes') }}" class="btn">
-                Back to restaurants
-            </a>
-        </p>
+    <section>
+        <h2>403 · Acceso denegado</h2>
+        <p>No tienes permiso para hacer esto.</p>
+        <p><a href="/restaurantes/">Volver a restaurantes</a></p>
     </section>
-{% endblock %}
+
+    </main>
+</body>
+</html>

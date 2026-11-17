@@ -1,29 +1,44 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del empleado</title>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/restaurantes/">Restaurantes</a>
+            <!-- Se muestran con JS según los permisos de GET /auth/me (solo UX). -->
+            <a href="/pedidos/" id="nav-pedidos" style="margin-left: 1rem;" hidden>Mis pedidos</a>
+            <a href="/cocina/" id="nav-cocina" style="margin-left: 1rem;" hidden>Cocina</a>
+            <a href="/empleados/" id="nav-empleados" style="margin-left: 1rem;" hidden>Empleados</a>
+            <span id="nav-usuario" style="margin-left: 1rem;" hidden></span>
+            <button type="button" id="btn-logout" style="margin-left: 1rem;" hidden>Cerrar sesión</button>
+            <a href="/auth/login" id="nav-login" style="margin-left: 1rem;">Iniciar sesión</a>
+        </nav>
+        <hr>
+    </header>
 
-{% block titulo %}Detalle de {{ empleado.nombre_completo }}{% endblock %}
+    <main>
+        <!-- Mensajes de éxito / error -->
+        <ul id="mensajes"></ul>
 
-{% block contenido %}
-    {% set permisos = current_user.permissions if current_user else [] %}
-    <h1>{{ empleado.nombre_completo }}</h1>
-    <p><strong>Primer nombre:</strong> {{ empleado.primer_nombre }}</p>
-    <p><strong>Segundo nombre:</strong> {{ empleado.segundo_nombre or 'No tiene' }}</p>
-    <p><strong>Apellido:</strong> {{ empleado.apellido }}</p>
-    <p><strong>CI:</strong> {{ empleado.ci }}</p>
-    <p><strong>Teléfono:</strong> {{ empleado.telefono }}</p>
-    <p><strong>Email:</strong> {{ empleado.email }}</p>
+    <h1 id="empleado-nombre-completo"></h1>
+    <p><strong>Primer nombre:</strong> <span id="empleado-primer-nombre"></span></p>
+    <p><strong>Segundo nombre:</strong> <span id="empleado-segundo-nombre"></span></p>
+    <p><strong>Apellido:</strong> <span id="empleado-apellido"></span></p>
+    <p><strong>CI:</strong> <span id="empleado-ci"></span></p>
+    <p><strong>Teléfono:</strong> <span id="empleado-telefono"></span></p>
+    <p><strong>Email:</strong> <span id="empleado-email"></span></p>
 
     <p>
-        {% if 'write:empleados' in permisos %}
-            <a href="{{ url_for('empleados.editar_empleado', empleado_id=empleado.id) }}">Editar Empleado</a>
-        {% endif %}
-        {% if 'delete:empleados' in permisos %}
-            <form action="{{ url_for('empleados.eliminar_empleado', empleado_id=empleado.id) }}"
-                  method="POST" style="display:inline;"
-                  onsubmit="return confirm('¿Estás seguro de eliminar este empleado?');">
-                <button type="submit" style="color: red;">Eliminar Empleado</button>
-            </form>
-        {% endif %}
+        <a href="#" id="link-editar" hidden>Editar Empleado</a>
+        <button type="button" id="btn-eliminar" style="color: red;" hidden>Eliminar Empleado</button>
     </p>
 
-    <p><br><a href="{{ url_for('empleados.listar_empleados') }}">Volver al listado</a></p>
-{% endblock %}
+    <p><br><a href="/empleados/">Volver al listado</a></p>
+
+    </main>
+</body>
+</html>

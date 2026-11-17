@@ -1,40 +1,36 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cocina</title>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/restaurantes/">Restaurantes</a>
+            <!-- Se muestran con JS según los permisos de GET /auth/me (solo UX). -->
+            <a href="/pedidos/" id="nav-pedidos" style="margin-left: 1rem;" hidden>Mis pedidos</a>
+            <a href="/cocina/" id="nav-cocina" style="margin-left: 1rem;" hidden>Cocina</a>
+            <a href="/empleados/" id="nav-empleados" style="margin-left: 1rem;" hidden>Empleados</a>
+            <span id="nav-usuario" style="margin-left: 1rem;" hidden></span>
+            <button type="button" id="btn-logout" style="margin-left: 1rem;" hidden>Cerrar sesión</button>
+            <a href="/auth/login" id="nav-login" style="margin-left: 1rem;">Iniciar sesión</a>
+        </nav>
+        <hr>
+    </header>
 
-{% block titulo %}Cocina{% endblock %}
+    <main>
+        <!-- Mensajes de éxito / error -->
+        <ul id="mensajes"></ul>
 
-{% block contenido %}
     <h1>Cola de la cocina</h1>
-    <p>Pedidos activos, los más antiguos primero. Recarga la página para ver los nuevos.</p>
+    <p>Pedidos activos, los más antiguos primero.</p>
 
-    {% set puede_avanzar = current_user and 'update:pedidos' in current_user.permissions %}
+    <!-- Un <section> por pedido. El botón "Pasar a ..." solo con update:pedidos. -->
+    <div id="cola-pedidos"></div>
+    <p id="sin-pedidos" hidden>No hay pedidos activos.</p>
 
-    {% if pedidos %}
-        {% for pedido in pedidos %}
-            <section style="border: 1px solid #999; padding: 0.5rem 1rem; margin-bottom: 1rem;">
-                <h2>Pedido #{{ pedido.id }} · {{ pedido.restaurante_nombre }}</h2>
-                <p>
-                    <strong>Estado:</strong> {{ etiquetas.get(pedido.estado, pedido.estado) }}
-                    · <strong>Fecha:</strong> {{ pedido.fecha.strftime('%Y-%m-%d') }}
-                    · <strong>Total:</strong> ${{ "%.2f"|format(pedido.total) }}
-                </p>
-                <ul>
-                    {% for item in pedido.items %}
-                        <li>{{ item.cantidad }} × {{ item.plato_nombre }}</li>
-                    {% endfor %}
-                </ul>
-
-                {# El admin ve la cola pero no avanza: el botón solo aparece con update:pedidos.
-                   La protección real es el decorador de cocina.avanzar. #}
-                {% set proximo = siguiente.get(pedido.estado) %}
-                {% if puede_avanzar and proximo %}
-                    <form action="{{ url_for('cocina.avanzar', pedido_id=pedido.id) }}" method="POST">
-                        <input type="hidden" name="estado" value="{{ proximo.nombre }}">
-                        <button type="submit">Pasar a: {{ proximo.etiqueta }}</button>
-                    </form>
-                {% endif %}
-            </section>
-        {% endfor %}
-    {% else %}
-        <p>No hay pedidos activos.</p>
-    {% endif %}
-{% endblock %}
+    </main>
+</body>
+</html>

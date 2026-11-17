@@ -1,43 +1,43 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Empleados</title>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/restaurantes/">Restaurantes</a>
+            <!-- Se muestran con JS según los permisos de GET /auth/me (solo UX). -->
+            <a href="/pedidos/" id="nav-pedidos" style="margin-left: 1rem;" hidden>Mis pedidos</a>
+            <a href="/cocina/" id="nav-cocina" style="margin-left: 1rem;" hidden>Cocina</a>
+            <a href="/empleados/" id="nav-empleados" style="margin-left: 1rem;" hidden>Empleados</a>
+            <span id="nav-usuario" style="margin-left: 1rem;" hidden></span>
+            <button type="button" id="btn-logout" style="margin-left: 1rem;" hidden>Cerrar sesión</button>
+            <a href="/auth/login" id="nav-login" style="margin-left: 1rem;">Iniciar sesión</a>
+        </nav>
+        <hr>
+    </header>
 
-{% block titulo %}Lista de Empleados{% endblock %}
+    <main>
+        <!-- Mensajes de éxito / error -->
+        <ul id="mensajes"></ul>
 
-{% block contenido %}
-    {% set permisos = current_user.permissions if current_user else [] %}
     <h1>Empleados</h1>
 
-    {% if 'write:empleados' in permisos %}
-        <p>
-            <a href="{{ url_for('empleados.crear_empleado') }}">Registrar nuevo empleado</a>
-        </p>
-    {% endif %}
+    <p id="acciones-empleados" hidden>
+        <a href="/empleados/formulario.html">Registrar nuevo empleado</a>
+    </p>
 
-    {% if empleados %}
-        <table border="1" cellpadding="5" cellspacing="0">
-            <thead>
-                <tr>
-                    <th>Nombre completo</th>
-                    <th>CI</th>
-                    <th>Teléfono</th>
-                    <th>Email</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for e in empleados %}
-                <tr>
-                    <td>{{ e.nombre_completo }}</td>
-                    <td>{{ e.ci }}</td>
-                    <td>{{ e.telefono }}</td>
-                    <td>{{ e.email }}</td>
-                    <td>
-                        <a href="{{ url_for('empleados.detalle_empleado', empleado_id=e.id) }}">Ver detalle</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>No hay empleados registrados.</p>
-    {% endif %}
-{% endblock %}
+    <table border="1" cellpadding="5" cellspacing="0">
+        <thead>
+            <tr><th>Nombre completo</th><th>CI</th><th>Teléfono</th><th>Email</th><th>Acciones</th></tr>
+        </thead>
+        <tbody id="lista-empleados"></tbody>
+    </table>
+    <p id="sin-empleados" hidden>No hay empleados registrados.</p>
+
+    </main>
+</body>
+</html>

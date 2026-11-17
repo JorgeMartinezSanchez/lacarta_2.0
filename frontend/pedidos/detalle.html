@@ -1,45 +1,51 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del pedido</title>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/restaurantes/">Restaurantes</a>
+            <!-- Se muestran con JS según los permisos de GET /auth/me (solo UX). -->
+            <a href="/pedidos/" id="nav-pedidos" style="margin-left: 1rem;" hidden>Mis pedidos</a>
+            <a href="/cocina/" id="nav-cocina" style="margin-left: 1rem;" hidden>Cocina</a>
+            <a href="/empleados/" id="nav-empleados" style="margin-left: 1rem;" hidden>Empleados</a>
+            <span id="nav-usuario" style="margin-left: 1rem;" hidden></span>
+            <button type="button" id="btn-logout" style="margin-left: 1rem;" hidden>Cerrar sesión</button>
+            <a href="/auth/login" id="nav-login" style="margin-left: 1rem;">Iniciar sesión</a>
+        </nav>
+        <hr>
+    </header>
 
-{% block titulo %}Pedido #{{ pedido.id }}{% endblock %}
+    <main>
+        <!-- Mensajes de éxito / error -->
+        <ul id="mensajes"></ul>
 
-{% block contenido %}
-    <h1>Pedido #{{ pedido.id }}</h1>
+    <h1>Pedido #<span id="pedido-id"></span></h1>
 
-    <p><strong>Restaurante:</strong>
-        <a href="{{ url_for('restaurantes.detalle_restaurante', restaurante_id=pedido.restaurante_id) }}">
-            {{ pedido.restaurante_nombre }}
-        </a>
-    </p>
-    <p><strong>Fecha:</strong> {{ pedido.fecha.strftime('%Y-%m-%d') }}</p>
-    <p><strong>Estado actual:</strong> {{ etiquetas.get(pedido.estado, pedido.estado) }}</p>
+    <p><strong>Restaurante:</strong> <a href="#" id="pedido-restaurante"></a></p>
+    <p><strong>Fecha:</strong> <span id="pedido-fecha"></span></p>
+    <p><strong>Estado actual:</strong> <span id="pedido-estado"></span></p>
 
     <h2>Platos</h2>
     <table border="1" cellpadding="5" cellspacing="0">
         <thead>
             <tr><th>Plato</th><th>Cantidad</th><th>Precio unitario</th><th>Subtotal</th></tr>
         </thead>
-        <tbody>
-            {% for item in pedido.items %}
-            <tr>
-                <td>{{ item.plato_nombre }}</td>
-                <td>{{ item.cantidad }}</td>
-                <td>${{ "%.2f"|format(item.precio_unitario) }}</td>
-                <td>${{ "%.2f"|format(item.precio_unitario * item.cantidad) }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
+        <tbody id="lista-items"></tbody>
         <tfoot>
-            <tr><th colspan="3">Total</th><th>${{ "%.2f"|format(pedido.total) }}</th></tr>
+            <tr><th colspan="3">Total</th><th>$<span id="pedido-total"></span></th></tr>
         </tfoot>
     </table>
 
-    {# El botón solo se muestra si se puede cancelar; la regla real la aplica el servidor. #}
-    {% if pedido.estado == 'pendiente' %}
-        <form action="{{ url_for('pedidos.cancelar_pedido', pedido_id=pedido.id) }}" method="POST"
-              onsubmit="return confirm('¿Cancelar este pedido?');">
-            <br><button type="submit" style="color: red;">Cancelar pedido</button>
-        </form>
-    {% endif %}
+    <!-- Solo se muestra si el pedido está pendiente; la regla real la aplica el servidor. -->
+    <p><br><button type="button" id="btn-cancelar" style="color: red;" hidden>Cancelar pedido</button></p>
 
-    <p><br><a href="{{ url_for('pedidos.listar_pedidos') }}">Volver a mis pedidos</a></p>
-{% endblock %}
+    <p><br><a href="/pedidos/">Volver a mis pedidos</a></p>
+
+    </main>
+</body>
+</html>
