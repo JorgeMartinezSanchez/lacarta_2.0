@@ -9,7 +9,7 @@ from ..models import ItemPedido, Pedido
 from ..repositories.pedido_repository import PedidoRepository
 from ..repositories.plato_repository import PlatoRepository
 from ..repositories.restaurantes_repository import RestauranteRepository
-from ..state.pedidos import ACTIVOS, DESTINOS_COCINA, Pendiente, cambiar_estado, estado_de
+from ..state.pedidos import ACTIVOS, DESTINOS_COCINA, ESTADOS, Pendiente, cambiar_estado, estado_de
 
 logger = logging.getLogger(__name__)
 
@@ -206,6 +206,7 @@ class PedidosService:
             id=p.id,
             restaurante_id=p.restaurante_id,
             estado=p.estado,
+            estado_etiqueta=ESTADOS[p.estado].etiqueta if p.estado in ESTADOS else p.estado,
             fecha=p.fecha,
             total=float(p.total),
             restaurante_nombre=p.restaurante.nombre,

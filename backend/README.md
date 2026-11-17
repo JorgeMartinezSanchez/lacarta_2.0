@@ -99,13 +99,20 @@ flask/app/
 | `write:carta` | Crear y editar restaurantes y platos | | | ✓ |
 | `delete:carta` | Borrar restaurantes y platos | | | ✓ |
 
+Todas las rutas responden JSON. Las que reciben datos esperan un cuerpo JSON (`Content-Type: application/json`). Los errores tienen siempre la forma `{"error": "<código>", "mensaje": "<texto>"}`.
+
 | Ruta | Permiso |
 |---|---|
-| `GET /restaurantes/`, `GET /restaurantes/<id>` | público |
-| `GET/POST /restaurantes/<id>/pedir` | `create:pedidos` |
+| `GET /restaurantes/`, `GET /restaurantes/<id>` (incluye `platos`), `GET /platos/`, `GET /platos/<id>` | público |
+| `POST /restaurantes/`, `PUT /restaurantes/<id>`, `POST /platos/`, `PUT /platos/<id>` | `write:carta` |
+| `DELETE /restaurantes/<id>`, `DELETE /platos/<id>` | `delete:carta` |
+| `POST /pedidos/` con `{"restaurante_id": 1, "items": [{"plato_id": 2, "cantidad": 1}]}` | `create:pedidos` |
 | `GET /pedidos/`, `GET /pedidos/<id>`, `POST /pedidos/<id>/cancelar` | `read:mis-pedidos` |
 | `GET /cocina/` | `read:pedidos` |
-| `POST /cocina/<id>/avanzar` | `update:pedidos` |
+| `POST /cocina/<id>/avanzar` con `{"estado": "en_preparacion"}` | `update:pedidos` |
+| `GET /empleados/`, `GET /empleados/<id>` · `POST`, `PUT` · `DELETE` | `read:` · `write:` · `delete:empleados` |
+| `GET /auth/me` (usuario y permisos, o `null`), `POST /auth/logout` (devuelve `logout_url`) | público |
+| `GET /auth/login?next=/ruta`, `GET /auth/callback` | redirecciones de Auth0 (el navegador navega, no `fetch`) |
 
 ---
 
@@ -327,19 +334,19 @@ Un 403 confirmaría que el pedido **existe** y que es de otra persona. Con eso, 
 
 ### 4.3 Dónde se aplica cada regla
 
-Todas las reglas se aplican en el servidor. Ocultar botones en los templates es solo una ayuda visual.
+Todas las reglas se aplican en el servidor. Ocultar botones en el frontend es solo una ayuda visual.
 
 | Regla | Archivo y función |
 |---|---|
-| R1.2 El cliente es el `sub` del token | `flask/app/routes/restaurantes.py` → `pedir` (`cliente=payload["sub"]`) |
+| R1.2 El cliente es el `sub` del token | `flask/app/routes/pedidos.py` → `crear_pedido` (`cliente=payload["sub"]`) |
 | R1.3 Precio congelado | `flask/app/services/pedido_service.py` → `create_pedido` (`precio_unitario=plato.precio`) |
-| R1.4 El total lo calcula el servidor | `pedido_service.py` → `create_pedido` (`total += plato.precio * cantidad`). Del formulario solo se leen `cantidad_<plato_id>` (`restaurantes.py` → `_items_desde_form`) |
+| R1.4 El total lo calcula el servidor | `pedido_service.py` → `create_pedido` (`total += plato.precio * cantidad`). Del JSON solo se leen `plato_id` y `cantidad` de cada ítem (`pedidos.py` → `_items_desde_json`) |
 | R1.5 Pedido atómico (existe, está disponible, es del mismo restaurante) | `pedido_service.py` → `create_pedido`: valida **todos** los ítems antes de escribir, hace un único `commit()` y `rollback()` ante cualquier error |
 | R1.5 Cantidad entera entre 1 y 20 | `pedido_service.py` → `_validar_cantidad` |
 | R1.6 `CHECK` en la base | `django_admin/django_admin/models.py`: `pedido_estado_valido`, `pedido_total_no_negativo`, `item_cantidad_1_a_20`, `item_precio_no_negativo` (migración `0002`) |
-| R1.7 404, 400 y Post/Redirect/Get | `routes/restaurantes.py` → `pedir`; `routes/pedidos.py`; `routes/cocina.py` (`abort(404)`, 400 con el formulario y `redirect` después de cada POST) |
+| R1.7 404 y 400 | `flask/app/errors.py` → `register_error_handlers`: `NotFoundError` → 404 y `BusinessRuleError` → 400, como JSON. Los controladores no necesitan `try/except` |
 | R2.4 Un permiso por ruta | Decorador `@requires_auth("…")` en cada ruta protegida (`flask/app/auth/decorators.py`) |
-| R2.5 Sin sesión: 401; sin permiso: 403 | `auth/decorators.py` → `requires_auth` y `check_permissions`; páginas en `auth/handlers.py` |
+| R2.5 Sin sesión: 401; sin permiso: 403 | `auth/decorators.py` → `requires_auth` y `check_permissions`; respuesta JSON en `auth/handlers.py` |
 | R2.6 Nadie ve pedidos ajenos | `repositories/pedido_repository.py` → `listar_por_cliente` y `get_de_cliente`; `services/pedido_service.py` → `_find_de_cliente` |
 | Estados: `pendiente → en_preparacion → listo → entregado` (cocina) | `flask/app/state/pedidos/` (patrón State): cada estado solo permite sus transiciones. `routes/cocina.py` → `avanzar` y `pedido_service.py` → `avanzar` (solo acepta destinos de cocina) |
 | Estados: `pendiente → cancelado` (cliente dueño) | `state/pedidos/pendiente.py` → `cancelar`; `en_preparacion.py` → `cancelar` lo rechaza. `pedido_service.py` → `cancelar` busca el pedido por `sub` |

@@ -13,6 +13,7 @@ class PedidosDTO_Output:
   total: float
   restaurante_nombre: str | None = None
   cliente: str | None = None  # sub de Auth0 del dueño
+  estado_etiqueta: str = ""   # "En preparación": para mostrar en pantalla
   items: tuple[ItemPedidosDTO_Output, ...] = field(default_factory=tuple)
 
 

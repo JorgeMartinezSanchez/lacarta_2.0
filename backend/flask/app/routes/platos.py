@@ -1,81 +1,58 @@
-"""Controlador de platos (capa de presentación)."""
-from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+"""Controlador de platos (capa de presentación). Responde JSON."""
+from flask import Blueprint, jsonify, request
 
 from ..auth import requires_auth
 from ..dtos.platos_dtos import PlatosDTO_Input
-from ..errors import BusinessRuleError, NotFoundError
 from .dependencias import platos_service
+from .peticion import booleano, cuerpo_json, entero, texto
 
 bp = Blueprint("platos", __name__, url_prefix="/platos")
 
 
-def _dto_desde_form(restaurante_id: int) -> PlatosDTO_Input:
+def _dto_desde_json(restaurante_id: int | None = None) -> PlatosDTO_Input:
+    data = cuerpo_json()
     return PlatosDTO_Input(
-        restaurante_id=restaurante_id,
-        nombre=request.form.get("nombre", ""),
-        precio=request.form.get("precio", ""),  # el servicio lo valida y convierte
-        disponible="disponible" in request.form,
+        restaurante_id=restaurante_id if restaurante_id is not None else entero(data, "restaurante_id"),
+        nombre=texto(data, "nombre"),
+        precio=data.get("precio"),  # el servicio lo valida y convierte
+        disponible=booleano(data, "disponible", default=True),
     )
 
 
-# Listar todos los platos (con filtro opcional por restaurante)
+# Listar todos los platos (con filtro opcional ?restaurante_id=)
 @bp.get("/")
 def listar_platos():
     platos = platos_service().get_all_platos(
         restaurante_id=request.args.get("restaurante_id", type=int)
     )
-    return render_template("platos/index.html", platos=platos)
+    return jsonify(platos)
 
 
 @bp.get("/<int:plato_id>")
 def detalle_plato(plato_id):
-    try:
-        plato = platos_service().get_plato(plato_id)
-    except NotFoundError:
-        abort(404)
-    return render_template("platos/detalle.html", plato=plato)
+    return jsonify(platos_service().get_plato(plato_id))
 
 
-# Crear plato DENTRO de un restaurante (necesita restaurante_id en la URL)
-@bp.post("/restaurante/<int:restaurante_id>")
+# Crear plato: el restaurante va en el cuerpo ({"restaurante_id": 1, ...})
+@bp.post("/")
 @requires_auth("write:carta")
-def agregar_plato(payload, restaurante_id):
-    try:
-        platos_service().create_plato(_dto_desde_form(restaurante_id))
-        flash("Plato agregado.", "success")
-    except BusinessRuleError as e:
-        flash(str(e), "error")
-    return redirect(url_for("restaurantes.detalle_restaurante", restaurante_id=restaurante_id))
+def agregar_plato(payload):
+    plato = platos_service().create_plato(_dto_desde_json())
+    return jsonify(plato), 201
 
 
-@bp.route("/<int:plato_id>/editar", methods=["GET", "POST"])
+@bp.put("/<int:plato_id>")
 @requires_auth("write:carta")
 def editar_plato(payload, plato_id):
     service = platos_service()
-    try:
-        plato = service.get_plato(plato_id)
-        if request.method == "POST":
-            # El formulario no permite cambiar de restaurante: se conserva el actual.
-            service.update_plato(plato_id, _dto_desde_form(plato.restaurante_id))
-            flash("Plato actualizado.", "success")
-            return redirect(url_for("platos.detalle_plato", plato_id=plato_id))
-    except NotFoundError:
-        abort(404)
-    except BusinessRuleError as e:
-        flash(str(e), "error")
-        return render_template("platos/formulario.html", plato=plato), 400
-    return render_template("platos/formulario.html", plato=plato)
+    plato = service.get_plato(plato_id)
+    # No se permite cambiar de restaurante: se conserva el actual.
+    plato = service.update_plato(plato_id, _dto_desde_json(plato.restaurante_id))
+    return jsonify(plato)
 
 
-@bp.post("/<int:plato_id>/eliminar")
+@bp.delete("/<int:plato_id>")
 @requires_auth("delete:carta")
 def eliminar_plato(payload, plato_id):
-    try:
-        platos_service().delete_plato(plato_id)
-    except NotFoundError:
-        abort(404)
-    except BusinessRuleError as e:
-        flash(str(e), "error")
-        return redirect(url_for("platos.detalle_plato", plato_id=plato_id))
-    flash("Plato eliminado.", "success")
-    return redirect(url_for("platos.listar_platos"))
+    platos_service().delete_plato(plato_id)
+    return jsonify(mensaje="Plato eliminado.")

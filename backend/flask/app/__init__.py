@@ -1,10 +1,10 @@
 import logging
 import os
 
-from flask import Flask, redirect, url_for
+from flask import Flask, jsonify
 from werkzeug.middleware.proxy_fix import ProxyFix
 from .config import Config
-from .extensions import db
+from .extensions import JSONProvider, db
 
 def create_app(config_class=Config):
     # Logs a la consola (docker compose logs flask). Nivel con LOG_LEVEL=DEBUG|INFO|WARNING...
@@ -13,6 +13,7 @@ def create_app(config_class=Config):
         format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
     )
     app = Flask(__name__)
+    app.json = JSONProvider(app)  # jsonify: fechas ISO 8601 y tildes sin escapar
     app.config.from_object(config_class)
     for key in ("AUTH0_DOMAIN", "AUTH0_AUDIENCE", "AUTH0_CLIENT_ID", "AUTH0_CLIENT_SECRET"):
         if not app.config[key]:
@@ -24,7 +25,7 @@ def create_app(config_class=Config):
     db.init_app(app)
 
     from . import models # noqa: F401 (registers the tables for migrations)
-    from .auth import AuthError, current_user
+    from .auth import AuthError
     from .auth.handlers import handle_auth_error
     from .auth.oauth import init_auth0
     from .auth.routes import bp as auth_bp
@@ -46,21 +47,19 @@ def create_app(config_class=Config):
 
     app.register_blueprint(auth_bp)
     app.register_error_handler(AuthError, handle_auth_error)
-    @app.context_processor
-    def inject_current_user():
-    # For the navbar and to hide buttons the user cannot use. Hiding is
-    # UX only: the decorator on each route is what protects it.
-        return {"current_user": current_user()}
-
     register_error_handlers(app)
 
-    @app.route('/health')
+    @app.get('/health')
     def health():
-        return 'OK', 200
+        return jsonify(status="ok")
 
-    @app.route('/')
+    @app.get('/')
     def inicio():
-        # La carta es la página de inicio (pública, sin login).
-        return redirect(url_for("restaurantes.listar_restaurantes"))
+        # Índice de la API. Cuando el frontend esté detrás de Nginx, "/" será suyo.
+        return jsonify(
+            nombre="La Carta API",
+            recursos=["/restaurantes/", "/platos/", "/pedidos/", "/cocina/",
+                      "/empleados/", "/auth/me"],
+        )
 
     return app
