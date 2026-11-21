@@ -74,6 +74,7 @@ services:
       - ./nginx/snippets:/etc/nginx/snippets:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - admin_static:/var/www/admin-static:ro
+      - ../frontend:/usr/share/nginx/html:ro   # frontend vanilla
     healthcheck:
       test: ["CMD-SHELL", "nginx -t -q"]
       interval: 30s

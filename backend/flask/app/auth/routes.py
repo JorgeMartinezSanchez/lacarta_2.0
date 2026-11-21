@@ -78,7 +78,7 @@ def logout():
     session.clear()
     params = urlencode({
         # Debe estar en "Allowed Logout URLs" de Auth0.
-        "returnTo": url_for("restaurantes.listar_restaurantes", _external=True),
+        "returnTo": url_for("inicio", _external=True),   # "/" = el frontend (Nginx)
         "client_id": current_app.config["AUTH0_CLIENT_ID"],
     })
     return jsonify(logout_url=f"https://{current_app.config['AUTH0_DOMAIN']}/v2/logout?{params}")

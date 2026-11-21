@@ -47,5 +47,17 @@ services:
       db:
         condition: service_healthy
 
+  # Frontend + API en un solo origen: http://localhost:8080
+  # El frontend se monta en vivo: editas un .js y basta con recargar.
+  nginx:
+    image: nginx:alpine
+    ports: ["8080:80"]
+    volumes:
+      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/snippets:/etc/nginx/snippets:ro
+      - ../frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - flask
+
 volumes:
   pg_data:
