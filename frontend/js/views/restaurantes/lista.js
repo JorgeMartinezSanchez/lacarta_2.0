@@ -1,20 +1,11 @@
 import { api } from "../../api.js";
+import { pintarTabla } from "../../../blocks/tabla/tabla.js";
 import { puede } from "../../state.js";
 import { esc, navegar } from "../../utils.js";
 
 export async function RestaurantesLista(params, query) {
   const ciudad = query.get("ciudad") || "";
   const restaurantes = await api.getRestaurantes(ciudad);
-
-  const filas = restaurantes
-    .map((r) => `
-      <tr>
-        <td class="tabla__celda"><a href="#/restaurantes/${r.id}">${esc(r.nombre)}</a></td>
-        <td class="tabla__celda">${esc(r.ciudad)}</td>
-        <td class="tabla__celda">${esc(r.direccion || "-")}</td>
-        <td class="tabla__celda">${r.num_platos}</td>
-      </tr>`)
-    .join("");
 
   return {
     html: `
@@ -27,10 +18,15 @@ export async function RestaurantesLista(params, query) {
       </form>
       ${puede("write:carta") ? `<p><a href="#/restaurantes/nuevo" class="boton">Nuevo restaurante</a></p>` : ""}
       ${restaurantes.length
-        ? `<table class="tabla">
-             <thead class="tabla__cabecera"><tr><th class="tabla__celda tabla__celda--titulo">Nombre</th><th class="tabla__celda tabla__celda--titulo">Ciudad</th><th class="tabla__celda tabla__celda--titulo">Dirección</th><th class="tabla__celda tabla__celda--titulo">Platos</th></tr></thead>
-             <tbody>${filas}</tbody>
-           </table>`
+        ? pintarTabla({
+            columnas: ["Nombre", "Ciudad", "Dirección", "Platos"],
+            filas: restaurantes.map((r) => [
+              `<a href="#/restaurantes/${r.id}">${esc(r.nombre)}</a>`,
+              esc(r.ciudad),
+              esc(r.direccion || "-"),
+              r.num_platos,
+            ]),
+          })
         : `<p>No hay restaurantes${ciudad ? ` en ${esc(ciudad)}` : ""}.</p>`}`,
     mount() {
       document.getElementById("form-filtro").addEventListener("submit", (ev) => {

@@ -1,5 +1,5 @@
-import { tomarMensajes } from "../state.js";
-import { esc } from "../utils.js";
+import { tomarMensajes } from "../../js/state.js";
+import { esc } from "../../js/utils.js";
 
 export function Mensajes() {
   const lista = tomarMensajes();

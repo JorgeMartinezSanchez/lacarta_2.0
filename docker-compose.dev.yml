@@ -15,11 +15,11 @@ services:
 
   flask:
     build:
-      context: ./flask
+      context: ./backend/flask
       dockerfile: Dockerfile.dev
     env_file: .env
     ports: ["5000:5000"]
-    volumes: ["./flask:/app"]
+    volumes: ["./backend/flask:/app"]
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:5000/health"]
       interval: 30s
@@ -32,11 +32,11 @@ services:
 
   django:
     build:
-      context: ./django_admin
+      context: ./backend/django_admin
       dockerfile: Dockerfile.dev
     env_file: .env
     ports: ["8000:8000"]
-    volumes: ["./django_admin:/app"]
+    volumes: ["./backend/django_admin:/app"]
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8000/health/"]
       interval: 30s
@@ -53,9 +53,9 @@ services:
     image: nginx:alpine
     ports: ["8080:80"]
     volumes:
-      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/snippets:/etc/nginx/snippets:ro
-      - ../frontend:/usr/share/nginx/html:ro
+      - ./backend/nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+      - ./backend/nginx/snippets:/etc/nginx/snippets:ro
+      - ./frontend:/usr/share/nginx/html:ro
     depends_on:
       - flask
 

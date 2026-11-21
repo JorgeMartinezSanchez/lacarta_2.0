@@ -1,6 +1,6 @@
-import { api } from "../api.js";
-import { state, puede } from "../state.js";
-import { esc } from "../utils.js";
+import { api } from "../../js/api.js";
+import { state, puede } from "../../js/state.js";
+import { esc } from "../../js/utils.js";
 
 export function Navbar() {
   const u = state.usuario;

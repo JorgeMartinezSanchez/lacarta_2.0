@@ -1,16 +1,13 @@
 import { api } from "../../api.js";
+import { pintarCampo } from "../../../blocks/campo/campo.js";
 import { enviarFormulario } from "../../components/acciones.js";
 import { esc } from "../../utils.js";
 
 // Sin id: crear. Con id: editar.
 export async function EmpleadoFormulario({ id }) {
   const e = id ? await api.getEmpleado(id) : {};
-  const campo = (name, label, { required = true, max = 50, type = "text" } = {}) => `
-    <div class="campo">
-      <label class="campo__etiqueta" for="${name}">${label}${required ? "*" : ""}</label>
-      <input class="campo__control" type="${type}" id="${name}" name="${name}" maxlength="${max}"
-             value="${esc(e[name])}" ${required ? "required" : ""}>
-    </div>`;
+  const campo = (name, label, opciones = {}) =>
+    pintarCampo({ name, label, value: e[name], required: true, max: 50, ...opciones });
 
   return {
     html: `

@@ -1,19 +1,11 @@
 import { api } from "../../api.js";
+import { pintarTabla } from "../../../blocks/tabla/tabla.js";
 import { botonEliminar } from "../../components/acciones.js";
 import { puede } from "../../state.js";
 import { dinero, esc } from "../../utils.js";
 
 export async function RestauranteDetalle({ id }) {
   const r = await api.getRestaurante(id);
-
-  const platos = r.platos
-    .map((p) => `
-      <tr>
-        <td class="tabla__celda"><a href="#/platos/${p.id}">${esc(p.nombre)}</a></td>
-        <td class="tabla__celda">${dinero(p.precio)}</td>
-        <td class="tabla__celda">${p.disponible ? "Disponible" : "No disponible"}</td>
-      </tr>`)
-    .join("");
 
   return {
     html: `
@@ -33,10 +25,14 @@ export async function RestauranteDetalle({ id }) {
 
       <h2>Carta</h2>
       ${r.platos.length
-        ? `<table class="tabla">
-             <thead class="tabla__cabecera"><tr><th class="tabla__celda tabla__celda--titulo">Plato</th><th class="tabla__celda tabla__celda--titulo">Precio</th><th class="tabla__celda tabla__celda--titulo">Disponibilidad</th></tr></thead>
-             <tbody>${platos}</tbody>
-           </table>`
+        ? pintarTabla({
+            columnas: ["Plato", "Precio", "Disponibilidad"],
+            filas: r.platos.map((p) => [
+              `<a href="#/platos/${p.id}">${esc(p.nombre)}</a>`,
+              dinero(p.precio),
+              p.disponible ? "Disponible" : "No disponible",
+            ]),
+          })
         : `<p>Este restaurante todavía no tiene platos.</p>`}
 
       <p><a href="#/restaurantes">Volver al listado</a></p>`,

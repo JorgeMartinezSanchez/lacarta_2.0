@@ -1,6 +1,6 @@
 import { flash } from "../state.js";
 import { datosForm, navegar } from "../utils.js";
-import { mostrarError } from "./mensajes.js";
+import { mostrarError } from "../../blocks/mensajes/mensajes.js";
 
 // Engancha un botón "Eliminar": confirma, llama a la API y redirige.
 export function botonEliminar(id, { pregunta, accion, destino }) {

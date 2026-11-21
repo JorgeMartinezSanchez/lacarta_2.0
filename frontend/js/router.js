@@ -1,8 +1,8 @@
 // Router por hash: #/platos/3 -> PlatoDetalle({ id: "3" }).
 // Usar el hash evita chocar con las rutas de Flask (/platos/, /auth/...)
 // cuando ambos se sirven desde el mismo dominio.
-import { Mensajes } from "./components/mensajes.js";
-import { Navbar, montarNavbar } from "./components/navbar.js";
+import { Mensajes } from "../blocks/mensajes/mensajes.js";
+import { Navbar, montarNavbar } from "../blocks/navbar/navbar.js";
 import { Cocina } from "./views/cocina.js";
 import { EmpleadoDetalle } from "./views/empleados/detalle.js";
 import { EmpleadoFormulario } from "./views/empleados/formulario.js";

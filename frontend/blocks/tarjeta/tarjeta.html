@@ -1,0 +1,10 @@
+<!-- Bloque "tarjeta": un pedido en la cola de la cocina.
+     tarjeta.js lo clona y llena cada [data-campo] con textContent (ya escapado). -->
+<template id="tpl-tarjeta">
+  <section class="tarjeta">
+    <h2 class="tarjeta__titulo">Pedido #<span data-campo="id"></span> · <span data-campo="restaurante"></span></h2>
+    <p class="tarjeta__meta"><span data-campo="fecha"></span> · <span class="estado" data-campo="estado"></span></p>
+    <ul class="tarjeta__lista" data-campo="items"></ul>
+    <button class="boton tarjeta__boton" type="button" data-campo="avanzar" hidden></button>
+  </section>
+</template>

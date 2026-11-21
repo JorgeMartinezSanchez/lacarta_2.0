@@ -1,17 +1,18 @@
 /* La Carta: punto de entrada de estilos (BEM).
-   Un archivo por bloque en bloques/: bloque, bloque__elemento, bloque--modificador. */
+   Cada bloque vive en su carpeta: blocks/<bloque>/<bloque>.css (+ .js / .html).
+   Para un bloque nuevo: crea la carpeta y agrega su @import aquí. */
 @import url("variables.css");
 @import url("base.css");
 
-@import url("bloques/pagina.css");
-@import url("bloques/navbar.css");
-@import url("bloques/boton.css");
-@import url("bloques/tabla.css");
-@import url("bloques/campo.css");
-@import url("bloques/filtro.css");
-@import url("bloques/acciones.css");
-@import url("bloques/mensajes.css");
-@import url("bloques/estado.css");
-@import url("bloques/cola.css");
-@import url("bloques/tarjeta.css");
-@import url("bloques/cargando.css");
+@import url("../blocks/pagina/pagina.css");
+@import url("../blocks/navbar/navbar.css");
+@import url("../blocks/boton/boton.css");
+@import url("../blocks/tabla/tabla.css");
+@import url("../blocks/campo/campo.css");
+@import url("../blocks/filtro/filtro.css");
+@import url("../blocks/acciones/acciones.css");
+@import url("../blocks/mensajes/mensajes.css");
+@import url("../blocks/estado/estado.css");
+@import url("../blocks/cola/cola.css");
+@import url("../blocks/tarjeta/tarjeta.css");
+@import url("../blocks/cargando/cargando.css");

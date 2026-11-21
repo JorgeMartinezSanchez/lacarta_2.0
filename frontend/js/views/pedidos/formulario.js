@@ -1,5 +1,6 @@
 import { api } from "../../api.js";
-import { mostrarError } from "../../components/mensajes.js";
+import { mostrarError } from "../../../blocks/mensajes/mensajes.js";
+import { pintarTabla } from "../../../blocks/tabla/tabla.js";
 import { flash } from "../../state.js";
 import { dinero, esc, navegar } from "../../utils.js";
 
@@ -10,27 +11,22 @@ export async function PedidoFormulario(params, query) {
   const r = await api.getRestaurante(restauranteId);
   const disponibles = r.platos.filter((p) => p.disponible);
 
-  const filas = disponibles
-    .map((p) => `
-      <tr>
-        <td class="tabla__celda">${esc(p.nombre)}</td>
-        <td class="tabla__celda">${dinero(p.precio)}</td>
-        <td class="tabla__celda"><input class="tabla__control" type="number" name="plato-${p.id}" data-plato="${p.id}"
-                   data-precio="${p.precio}" min="0" max="20" value="0"></td>
-      </tr>`)
-    .join("");
-
   return {
     html: `
       <h1>Hacer un pedido en ${esc(r.nombre)}</h1>
       ${disponibles.length
         ? `<p>Indica cuántas unidades quieres de cada plato (de 1 a 20). Deja en 0 los que no pidas.</p>
            <form id="form-pedido">
-             <table class="tabla">
-               <thead class="tabla__cabecera"><tr><th class="tabla__celda tabla__celda--titulo">Plato</th><th class="tabla__celda tabla__celda--titulo">Precio</th><th class="tabla__celda tabla__celda--titulo">Cantidad</th></tr></thead>
-               <tbody>${filas}</tbody>
-               <tfoot><tr><th class="tabla__celda tabla__celda--titulo" colspan="2">Total estimado</th><th class="tabla__celda tabla__celda--titulo" id="total">${dinero(0)}</th></tr></tfoot>
-             </table>
+             ${pintarTabla({
+               columnas: ["Plato", "Precio", "Cantidad"],
+               filas: disponibles.map((p) => [
+                 esc(p.nombre),
+                 dinero(p.precio),
+                 `<input class="tabla__control" type="number" name="plato-${p.id}" data-plato="${p.id}"
+                         data-precio="${p.precio}" min="0" max="20" value="0">`,
+               ]),
+               pie: [{ html: "Total estimado", colspan: 2 }, { html: dinero(0), id: "total" }],
+             })}
              <button class="boton" type="submit">Hacer pedido</button>
            </form>`
         : `<p>Este restaurante no tiene platos disponibles en este momento.</p>`}

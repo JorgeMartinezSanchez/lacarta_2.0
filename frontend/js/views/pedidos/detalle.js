@@ -1,5 +1,7 @@
 import { api } from "../../api.js";
-import { mostrarError } from "../../components/mensajes.js";
+import { mostrarError } from "../../../blocks/mensajes/mensajes.js";
+import { pintarEstado } from "../../../blocks/estado/estado.js";
+import { pintarTabla } from "../../../blocks/tabla/tabla.js";
 import { flash } from "../../state.js";
 import { dinero, esc, fecha } from "../../utils.js";
 import { render } from "../../router.js";
@@ -7,29 +9,24 @@ import { render } from "../../router.js";
 export async function PedidoDetalle({ id }) {
   const p = await api.getPedido(id);
 
-  const items = p.items
-    .map((i) => `
-      <tr>
-        <td class="tabla__celda">${esc(i.plato_nombre)}</td>
-        <td class="tabla__celda">${i.cantidad}</td>
-        <td class="tabla__celda">${dinero(i.precio_unitario)}</td>
-        <td class="tabla__celda">${dinero(i.precio_unitario * i.cantidad)}</td>
-      </tr>`)
-    .join("");
-
   return {
     html: `
       <h1>Pedido #${p.id}</h1>
       <p><strong>Restaurante:</strong>
         <a href="#/restaurantes/${p.restaurante_id}">${esc(p.restaurante_nombre)}</a></p>
       <p><strong>Fecha:</strong> ${fecha(p.fecha)}</p>
-      <p><strong>Estado:</strong> <span class="estado estado--${esc(p.estado)}">${esc(p.estado_etiqueta)}</span></p>
+      <p><strong>Estado:</strong> ${pintarEstado(p)}</p>
 
-      <table class="tabla">
-        <thead class="tabla__cabecera"><tr><th class="tabla__celda tabla__celda--titulo">Plato</th><th class="tabla__celda tabla__celda--titulo">Cantidad</th><th class="tabla__celda tabla__celda--titulo">Precio unitario</th><th class="tabla__celda tabla__celda--titulo">Subtotal</th></tr></thead>
-        <tbody>${items}</tbody>
-        <tfoot><tr><th class="tabla__celda tabla__celda--titulo" colspan="3">Total</th><th class="tabla__celda tabla__celda--titulo">${dinero(p.total)}</th></tr></tfoot>
-      </table>
+      ${pintarTabla({
+        columnas: ["Plato", "Cantidad", "Precio unitario", "Subtotal"],
+        filas: p.items.map((i) => [
+          esc(i.plato_nombre),
+          i.cantidad,
+          dinero(i.precio_unitario),
+          dinero(i.precio_unitario * i.cantidad),
+        ]),
+        pie: [{ html: "Total", colspan: 3 }, dinero(p.total)],
+      })}
 
       ${p.estado === "pendiente"
         ? `<p><button class="boton boton--peligro" type="button" id="btn-cancelar">Cancelar pedido</button></p>`
