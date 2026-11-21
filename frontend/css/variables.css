@@ -1,0 +1,12 @@
+/* Variables (colores, radios) usadas por todos los bloques. */
+:root {
+  --color-fondo: #faf8f5;
+  --color-superficie: #fff;
+  --color-texto: #222;
+  --color-suave: #666;
+  --color-borde: #ddd;
+  --color-acento: #b5432a;
+  --color-peligro: #c0392b;
+  --color-exito: #2e7d32;
+  --radio: 4px;
+}

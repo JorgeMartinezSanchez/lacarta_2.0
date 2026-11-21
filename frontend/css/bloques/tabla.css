@@ -1,0 +1,15 @@
+/* Bloque: tabla */
+.tabla {
+  width: 100%;
+  margin: 1rem 0;
+  border-collapse: collapse;
+  background: var(--color-superficie);
+}
+.tabla__cabecera { background: #f0ebe4; }
+.tabla__celda {
+  padding: .5rem;
+  border: 1px solid var(--color-borde);
+  text-align: left;
+}
+.tabla__celda--titulo { font-weight: 600; }
+.tabla__control { width: 5rem; padding: .25rem; }

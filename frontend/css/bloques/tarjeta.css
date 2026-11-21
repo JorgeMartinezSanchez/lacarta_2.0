@@ -1,0 +1,10 @@
+/* Bloque: tarjeta */
+.tarjeta {
+  padding: 1rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 6px;
+  background: var(--color-superficie);
+}
+.tarjeta__titulo { margin: 0 0 .5rem; font-size: 1.1rem; }
+.tarjeta__meta   { margin: 0 0 .5rem; color: var(--color-suave); }
+.tarjeta__lista  { margin: 0 0 1rem; padding-left: 1.2rem; }

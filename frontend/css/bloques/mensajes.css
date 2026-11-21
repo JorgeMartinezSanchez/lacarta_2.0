@@ -1,0 +1,13 @@
+/* Bloque: mensajes */
+.mensajes {
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+.mensajes__item {
+  margin-bottom: .5rem;
+  padding: .6rem 1rem;
+  border-radius: var(--radio);
+}
+.mensajes__item--exito { background: #e8f5e9; color: var(--color-exito); }
+.mensajes__item--error { background: #fdecea; color: var(--color-peligro); }

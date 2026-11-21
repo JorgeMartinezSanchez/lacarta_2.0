@@ -1,0 +1,17 @@
+/* Bloque: campo */
+.campo { margin-bottom: 1rem; }
+.campo__etiqueta {
+  display: block;
+  margin-bottom: .25rem;
+}
+.campo__control {
+  width: 100%;
+  max-width: 400px;
+  padding: .4rem;
+  font: inherit;
+}
+.campo--checkbox .campo__etiqueta {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}

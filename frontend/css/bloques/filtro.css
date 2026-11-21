@@ -1,0 +1,9 @@
+/* Bloque: filtro */
+.filtro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+  margin: 1rem 0;
+}
+.filtro__control { padding: .4rem; font: inherit; }

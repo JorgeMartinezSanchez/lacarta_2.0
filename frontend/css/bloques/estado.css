@@ -1,0 +1,12 @@
+/* Bloque: estado */
+.estado {
+  padding: .1rem .5rem;
+  border-radius: 999px;
+  font-size: .9em;
+  background: #eee;
+}
+.estado--pendiente      { background: #fff3cd; }
+.estado--en_preparacion { background: #d6eaff; }
+.estado--listo          { background: #d4edda; }
+.estado--entregado      { background: #e2e3e5; }
+.estado--cancelado      { background: #f8d7da; }

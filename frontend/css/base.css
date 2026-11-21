@@ -1,0 +1,14 @@
+/* Base: solo etiquetas sueltas, sin clases. */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+  background: var(--color-fondo);
+  color: var(--color-texto);
+}
+
+a { color: var(--color-acento); }

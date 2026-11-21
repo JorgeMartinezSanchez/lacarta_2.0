@@ -1,0 +1,6 @@
+/* Bloque: cargando */
+.cargando {
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-suave);
+}
